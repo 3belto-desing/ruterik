@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ruterik Pro - Control Autónomo</title>
     
-    <link rel="icon" type="image/jpeg" href="https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/logoCreator_imagetologo.jpg">
+    <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -17,7 +18,9 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; min-height: 100vh; width: 100vw; overflow-x: hidden; }
         
-        body.login-state { background-image: url('https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/unnamed.jpg'); background-size: cover; background-position: center; align-items: center; background-attachment: fixed; }
+        /* FONDO DE LOGIN LOCAL */
+        body.login-state { background-image: url('unnamed.jpg'); background-size: cover; background-position: center; align-items: center; background-attachment: fixed; }
+        
         #auth-container { max-width: 400px; width: 90%; background: rgba(255, 255, 255, 0.98); padding: 45px; border-radius: 35px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.5); display: none; }
         
         body.app-active { align-items: flex-start; padding: 20px; }
@@ -52,7 +55,7 @@
 <body class="login-state">
 
     <div id="auth-container">
-        <img src="https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/logoCreator_imagetologo.jpg" style="width:110px; border-radius:20px; margin-bottom:15px;">
+        <img src="logoCreator_imagetologo.jpg" style="width:110px; border-radius:20px; margin-bottom:15px;">
         <div class="brand">RUTERIK</div>
         <input type="email" id="email" placeholder="Tu Correo">
         <input type="password" id="password" placeholder="Tu Contraseña">
@@ -63,7 +66,7 @@
     <div id="app-container">
         <div class="header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/logoCreator_imagetologo.jpg" style="height:45px; border-radius:10px;">
+                <img src="logoCreator_imagetologo.jpg" style="height:45px; border-radius:10px;">
                 <div class="brand">RUTERIK PRO</div>
             </div>
             <div id="chofer-status" style="font-weight:bold; font-size:13px; color:var(--delete);">● GPS CHOFER OFF</div>
