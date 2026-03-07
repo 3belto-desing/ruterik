@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RapidPack - Modo Rastreo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background: #000; color: white; text-align: center; padding: 50px 20px; }
+        .radar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #00c853; display: inline-block; animation: p 2s infinite; margin-bottom: 30px; }
+        @keyframes p { 0% { box-shadow: 0 0 0 0 rgba(0,200,83,0.7); } 70% { box-shadow: 0 0 0 30px rgba(0,200,83,0); } 100% { box-shadow: 0 0 0 0 rgba(0,200,83,0); } }
+        #btn { background: #00c853; color: white; border: none; padding: 25px 50px; border-radius: 50px; font-weight: bold; font-size: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="radar"></div>
+    <h1>SISTEMA DE RASTREO</h1>
+    <p id="msg">Presiona al salir de la base de RapidPack.</p>
+    <button id="btn" onclick="start()">INICIAR JORNADA</button>
+    <p id="coords" style="margin-top:30px; color:#444; font-family:monospace; font-size:12px;"></p>
+
+    <script>
+        const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
+        
+        function start() {
+            document.getElementById('btn').style.display = 'none';
+            document.getElementById('msg').innerText = "📡 TRANSMITIENDO EN VIVO... Ya puedes cerrar el celular y guardarlo.";
+            
+            if ('wakeLock' in navigator) { navigator.wakeLock.request('screen'); }
+
+            navigator.geolocation.watchPosition(async (pos) => {
+                const lat = pos.coords.latitude, lng = pos.coords.longitude;
+                document.getElementById('coords').innerText = lat.toFixed(5) + ", " + lng.toFixed(5);
+                await db.from('rastreo_chofer').update({ lat, lng, actualizado_en: new Date() }).eq('id', 1);
+            }, null, { enableHighAccuracy: true });
+        }
+    </script>
+</body>
+</html>

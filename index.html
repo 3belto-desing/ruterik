@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruterik Pro - Control Autónomo</title>
+    
+    <link rel="icon" type="image/jpeg" href="https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/logoCreator_imagetologo.jpg">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { 
+            --primary: #00c853; --bg: #f4f7f6; --card: #ffffff; --text: #333; 
+            --border: #ddd; --edit: #2196f3; --delete: #ff5252; --work: #9c27b0; --truck: #ff9800; 
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; min-height: 100vh; width: 100vw; overflow-x: hidden; }
+        
+        body.login-state { background-image: url('https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/unnamed.jpg'); background-size: cover; background-position: center; align-items: center; background-attachment: fixed; }
+        #auth-container { max-width: 400px; width: 90%; background: rgba(255, 255, 255, 0.98); padding: 45px; border-radius: 35px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.5); display: none; }
+        
+        body.app-active { align-items: flex-start; padding: 20px; }
+        #app-container { display: none; background: var(--card); padding: 30px; border-radius: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1250px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
+        .brand { font-size: 32px; font-weight: 900; color: var(--primary); letter-spacing: -2px; }
+
+        .progress-wrapper { background: #e0e0e0; border-radius: 12px; height: 26px; width: 100%; margin-bottom: 15px; overflow: hidden; position: relative; border: 1px solid var(--border); }
+        #progress-bar { background: var(--primary); height: 100%; width: 0%; transition: 0.8s ease-in-out; }
+        #progress-text { position: absolute; width: 100%; text-align: center; font-size: 12px; font-weight: 900; color: #000; line-height: 26px; }
+
+        #map { height: 450px; border-radius: 20px; border: 2px solid var(--border); margin-bottom: 25px; z-index: 1; }
+
+        .form-container { background: var(--bg); padding: 20px; border-radius: 20px; margin-bottom: 25px; border: 1px solid var(--border); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+        input { padding: 12px; border: 1px solid var(--border); border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+
+        .seccion { display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; }
+        .panel { background: var(--bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); }
+
+        .item-cl { background: var(--card); padding: 12px; border: 1px solid var(--border); margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .item-cl.entregado { border-left: 10px solid var(--primary); background: #e8f5e9; }
+        .item-cl.pendiente { border-left: 10px solid var(--delete); }
+
+        .whatsapp-box { margin-top: 25px; padding: 20px; border-radius: 20px; border: 2px solid var(--primary); }
+        textarea { width: 100%; margin-top: 10px; padding: 15px; border-radius: 10px; border: 1px solid var(--border); resize: none; box-sizing: border-box; font-size: 14px; }
+    </style>
+</head>
+<body class="login-state">
+
+    <div id="auth-container">
+        <img src="https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/logoCreator_imagetologo.jpg" style="width:110px; border-radius:20px; margin-bottom:15px;">
+        <div class="brand">RUTERIK</div>
+        <input type="email" id="email" placeholder="Tu Correo">
+        <input type="password" id="password" placeholder="Tu Contraseña">
+        <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; width:100%; font-weight:bold; cursor:pointer; margin-top:10px;">ACCEDER</button>
+        <p id="error-msg" style="color:red; font-size:12px; margin-top:10px;"></p>
+    </div>
+
+    <div id="app-container">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="https://afwhdlyabjuwokzizgfy.supabase.co/storage/v1/object/public/rutas-erick/logoCreator_imagetologo.jpg" style="height:45px; border-radius:10px;">
+                <div class="brand">RUTERIK PRO</div>
+            </div>
+            <div id="chofer-status" style="font-weight:bold; font-size:13px; color:var(--delete);">● GPS CHOFER OFF</div>
+            <button onclick="logout()" style="color:red; background:none; border:none; font-weight:bold; cursor:pointer;">SALIR</button>
+        </div>
+
+        <div class="progress-wrapper">
+            <div id="progress-bar"></div>
+            <div id="progress-text">ESPERANDO DESPACHO</div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="form-container">
+            <div class="form-grid">
+                <input type="text" id="reg-nombre" placeholder="Nombre del Cliente" class="full-width">
+                <input type="text" id="reg-codigo" placeholder="ID RP (RapidPack)" class="full-width">
+                <div>
+                    <h5 style="margin:0 0 5px 0">🏠 Opción Casa</h5>
+                    <input type="text" id="reg-d1" placeholder="Dirección">
+                    <div style="display:flex; gap:5px;"><input type="text" id="reg-lat1" placeholder="Lat"><input type="text" id="reg-lng1" placeholder="Lng"></div>
+                </div>
+                <div>
+                    <h5 style="margin:0 0 5px 0">🏢 Opción Trabajo</h5>
+                    <input type="text" id="reg-d2" placeholder="Dirección">
+                    <div style="display:flex; gap:5px;"><input type="text" id="reg-lat2" placeholder="Lat"><input type="text" id="reg-lng2" placeholder="Lng"></div>
+                </div>
+            </div>
+            <button id="btn-save" class="btn-save" onclick="procesarCliente()">GUARDAR FICHA</button>
+        </div>
+
+        <div class="seccion">
+            <div class="panel">
+                <h4>🗂 Buscar</h4>
+                <input type="text" oninput="buscar()" id="buscador" placeholder="Escribe para buscar..." style="padding:10px; width:95%; border-radius:10px; border:1px solid #ddd;">
+                <div id="res-busqueda" style="margin-top:15px;"></div>
+            </div>
+            <div class="panel">
+                <h4>📍 Ruta (<span id="count">0</span>)</h4>
+                <button onclick="optimizar()" style="width:100%; background:#ffd600; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; margin-bottom:10px;">⚡ OPTIMIZAR ORDEN</button>
+                <div id="lista-ruta"></div>
+            </div>
+        </div>
+
+        <div class="whatsapp-box">
+            <h4>📋 Reporte para el Chofer</h4>
+            <textarea id="output" rows="6" readonly></textarea>
+            <button onclick="copiar()" style="width:100%; background:#25d366; color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; margin-top:10px; cursor:pointer;">COPIAR REPORTE</button>
+        </div>
+    </div>
+
+<script>
+    const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
+    const db = supabase.createClient(SB_URL, SB_KEY);
+    const SUCURSAL = [18.487742509141945, -69.85612267761425];
+    
+    let map, markersLayer, choferMarker, ruta = [], editandoId = null;
+
+    db.auth.onAuthStateChange((e, s) => {
+        if (s) {
+            document.body.classList.replace('login-state', 'app-active');
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            iniciarMapa(); escucharChofer();
+        } else {
+            document.body.classList.replace('app-active', 'login-state');
+            document.getElementById('auth-container').style.display = 'block';
+            document.getElementById('app-container').style.display = 'none';
+        }
+    });
+
+    async function login() {
+        const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
+        if (error) document.getElementById('error-msg').innerText = "Credenciales incorrectas";
+    }
+    async function logout() { await db.auth.signOut(); }
+
+    function iniciarMapa() {
+        if (map) return;
+        map = L.map('map').setView(SUCURSAL, 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker(SUCURSAL).addTo(map).bindPopup("<b>Base SDE</b>");
+        markersLayer = L.layerGroup().addTo(map);
+        choferMarker = L.marker(SUCURSAL, { icon: L.divIcon({ html: '🚚', className: 't-icon', iconSize:[30,30] }) }).addTo(map);
+    }
+
+    function calcularDistancia(la1, lo1, la2, lo2) {
+        const R = 6371e3;
+        const dL = (la2-la1)*Math.PI/180, dO = (lo2-lo1)*Math.PI/180;
+        const a = Math.sin(dL/2)**2 + Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function escucharChofer() {
+        db.channel('rastreo').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, p => {
+            const lat = p.new.lat, lng = p.new.lng;
+            choferMarker.setLatLng([lat, lng]);
+            document.getElementById('chofer-status').style.color = 'var(--primary)';
+            document.getElementById('chofer-status').innerText = '● CHOFER EN MOVIMIENTO';
+
+            ruta.forEach((cl, i) => {
+                if (!cl.entregado) {
+                    if (calcularDistancia(lat, lng, cl.aLat, cl.aLng) < 50) {
+                        ruta[i].entregado = true; actualizarUI();
+                    }
+                }
+            });
+        }).subscribe();
+    }
+
+    async function procesarCliente() {
+        const n = document.getElementById('reg-nombre').value;
+        if (!n) return alert("Nombre obligatorio");
+        const data = { 
+            nombre: n, codigo_rp: document.getElementById('reg-codigo').value, 
+            direccion: document.getElementById('reg-d1').value, lat: parseFloat(document.getElementById('reg-lat1').value), lng: parseFloat(document.getElementById('reg-lng1').value),
+            direccion_2: document.getElementById('reg-d2').value, lat_2: parseFloat(document.getElementById('reg-lat2').value), lng_2: parseFloat(document.getElementById('reg-lng2').value)
+        };
+        if (editandoId) await db.from('clientes').update(data).eq('id', editandoId);
+        else await db.from('clientes').insert([data]);
+        location.reload();
+    }
+
+    async function buscar() {
+        const txt = document.getElementById('buscador').value;
+        if (txt.length < 2) return;
+        const { data } = await db.from('clientes').select('*').or(`nombre.ilike.%${txt}%,codigo_rp.ilike.%${txt}%`).limit(5);
+        const res = document.getElementById('res-busqueda'); res.innerHTML = "";
+        data.forEach(cl => {
+            res.innerHTML += `<div class="item-cl">
+                <span><b>${cl.nombre}</b></span>
+                <div>
+                    <button class="btn-save" style="padding:5px 10px; font-size:10px; background:var(--primary)" onclick='agregar(${JSON.stringify(cl)}, 1)'>🏠</button>
+                    <button class="btn-save" style="padding:5px 10px; font-size:10px; background:var(--work)" onclick='agregar(${JSON.stringify(cl)}, 2)'>🏢</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function agregar(cl, tipo) {
+        const lt = (tipo === 1) ? cl.lat : cl.lat_2, lg = (tipo === 1) ? cl.lng : cl.lng_2;
+        if (!lt) return alert("Sin coordenadas");
+        ruta.push({ ...cl, aLat: lt, aLng: lg, tLabel: (tipo === 1 ? '🏠' : '🏢'), entregado: false });
+        actualizarUI();
+    }
+
+    function actualizarUI() {
+        const list = document.getElementById('lista-ruta');
+        document.getElementById('count').innerText = ruta.length;
+        list.innerHTML = ""; markersLayer.clearLayers();
+        let ents = 0, mapsUrl = `https://www.google.com/maps/dir/Lat,Lng/Lat,Lng/Lat,Lng...0{SUCURSAL[0]},${SUCURSAL[1]}/`, txt = "*Ruta RapidPack S.D.E.*\n\n";
+
+        ruta.forEach((cl, i) => {
+            if (cl.entregado) ents++;
+            list.innerHTML += `<div class="item-cl ${cl.entregado ? 'entregado' : 'pendiente'}">
+                <span>${i+1}. ${cl.tLabel} ${cl.nombre}</span>
+                <button onclick="ruta.splice(${i},1); actualizarUI();" style="border:none; background:none; color:red; cursor:pointer;">×</button>
+            </div>`;
+            L.circleMarker([cl.aLat, cl.aLng], { color: cl.entregado ? 'green' : 'red', radius: 8 }).addTo(markersLayer);
+            mapsUrl += `${cl.aLat},${cl.aLng}/`;
+            txt += `${i+1}. ${cl.nombre} (${cl.tLabel}) ${cl.entregado ? '[OK]' : ''}\n`;
+        });
+
+        const porc = ruta.length > 0 ? Math.round((ents / ruta.length) * 100) : 0;
+        document.getElementById('progress-bar').style.width = porc + "%";
+        document.getElementById('progress-text').innerText = `PROGRESO: ${ents}/${ruta.length} (${porc}%)`;
+        document.getElementById('output').value = ruta.length > 0 ? txt + "\n📍 Link GPS:\n" + mapsUrl : "";
+    }
+
+    function optimizar() {
+        ruta.sort((a,b) => {
+            const dA = Math.sqrt((a.aLat-SUCURSAL[0])**2 + (a.aLng-SUCURSAL[1])**2);
+            const dB = Math.sqrt((b.aLat-SUCURSAL[0])**2 + (b.aLng-SUCURSAL[1])**2);
+            return dA - dB;
+        });
+        actualizarUI();
+    }
+
+    function copiar() {
+        const o = document.getElementById('output'); o.select(); document.execCommand('copy'); alert("Ruta copiada");
+    }
+</script>
+</body>
+</html>
