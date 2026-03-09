@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro v7.0 - RapidPack</title>
+    <title>Ruterik Pro v7.0 - RapidPack SDE</title>
     
     <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,44 +11,42 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
-        :root { --primary: #00c853; --dark: #1a1a1b; --bg: #f0f2f5; --text: #2d3436; --accent: #2196f3; }
-        
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        :root { --primary: #00c853; --bg: #f0f2f5; --card: #ffffff; --text: #2d3436; --accent: #2196f3; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         
         /* LOGIN */
-        body.login-state { background: url('unnamed.jpg') center/cover fixed; align-items: center; justify-content: center; }
-        #auth-card { background: rgba(255,255,255,0.96); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; width: 350px; display: none; }
+        body.login-state { background: url('unnamed.jpg') center/cover no-repeat fixed; align-items: center; justify-content: center; }
+        #auth-card { background: rgba(255,255,255,0.98); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; width: 350px; display: none; }
         
-        /* APP LAYOUT */
+        /* DASHBOARD */
         #app-container { display: none; padding: 20px; gap: 20px; grid-template-columns: 380px 1fr; max-width: 1600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-        
-        .header { grid-column: span 2; display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .brand { font-size: 26px; font-weight: 900; color: var(--primary); letter-spacing: -1px; }
+        .header { grid-column: span 2; display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .brand { font-size: 26px; font-weight: 900; color: var(--primary); letter-spacing: -1.5px; }
 
         .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; }
-        
-        /* MAPA */
-        #map { height: 450px; border-radius: 20px; border: 1px solid #ddd; z-index: 1; }
+        #map { height: 420px; border-radius: 20px; border: 1px solid #ddd; margin-bottom: 15px; z-index: 1; }
 
-        /* PROGRESO */
-        .progress-box { background: #e0e0e0; border-radius: 10px; height: 25px; position: relative; overflow: hidden; margin-top: 10px; }
-        #progress-bar { background: var(--primary); height: 100%; width: 0%; transition: 0.8s ease; }
-        #progress-text { position: absolute; width: 100%; text-align: center; line-height: 25px; font-size: 12px; font-weight: 800; color: #000; }
+        /* PROGRESS BAR */
+        .progress-box { background: #e0e0e0; border-radius: 12px; height: 26px; position: relative; overflow: hidden; }
+        #progress-bar { background: var(--primary); height: 100%; width: 0%; transition: 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+        #progress-text { position: absolute; width: 100%; text-align: center; line-height: 26px; font-size: 11px; font-weight: 900; color: #000; }
 
         /* FORMULARIOS */
         .form-group { margin-bottom: 12px; }
-        label { font-size: 12px; font-weight: 700; color: #666; display: block; margin-bottom: 4px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
-        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; width: 100%; }
+        label { font-size: 11px; font-weight: 800; color: #7f8c8d; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        input { width: 100%; padding: 11px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 200, 83, 0.1); }
+        .btn { border: none; padding: 13px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; width: 100%; text-transform: uppercase; font-size: 12px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-accent { background: var(--accent); color: white; }
         .btn-warn { background: #ffd600; color: #000; }
 
         /* LISTAS */
-        .item-cl { background: #f9f9f9; padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 6px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
-        .item-cl.entregado { border-left-color: var(--primary); background: #e8f5e9; }
+        .item-cl { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 6px solid #dfe6e9; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .item-cl.entregado { border-left-color: var(--primary); background: #f0fdf4; }
+        .btn-circle { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         
-        textarea { width: 100%; border-radius: 12px; border: 1px solid #ddd; padding: 10px; font-size: 13px; font-family: inherit; resize: none; margin-top: 10px; }
+        textarea { width: 100%; border-radius: 12px; border: 1px solid #ddd; padding: 12px; font-size: 13px; font-family: inherit; resize: none; margin-top: 10px; background: #fffcf0; font-weight: 500; }
     </style>
 </head>
 <body class="login-state">
@@ -56,48 +54,50 @@
     <div id="auth-card">
         <img src="logoCreator_imagetologo.jpg" style="width:100px; border-radius:20px; margin-bottom:15px;">
         <div class="brand">RUTERIK PRO</div>
-        <input type="email" id="email" placeholder="Usuario" style="margin-top:20px;">
+        <p style="font-size: 13px; color: #666;">Panel de Control RapidPack</p>
+        <input type="email" id="email" placeholder="Usuario / Email" style="margin-top:20px;">
         <input type="password" id="password" placeholder="Contraseña" style="margin-top:10px;">
-        <button onclick="login()" class="btn btn-primary" style="margin-top:20px;">ACCEDER AL SISTEMA</button>
+        <button onclick="login()" class="btn btn-primary" style="margin-top:20px;">ENTRAR AL SISTEMA</button>
+        <p id="auth-error" style="color: red; font-size: 11px; margin-top: 10px; font-weight: bold;"></p>
     </div>
 
-    <div id="app-container" style="display: grid;">
+    <div id="app-container">
         <div class="header">
             <div style="display:flex; align-items:center; gap:12px;">
                 <img src="logoCreator_imagetologo.jpg" style="height:45px; border-radius:10px;">
-                <div class="brand">RAPIDPACK S.D.E.</div>
+                <div class="brand">RAPIDPACK LOGISTICS</div>
             </div>
             <div style="display:flex; gap:15px; align-items:center;">
-                <a href="chofer.html" target="_blank" style="text-decoration:none; font-weight:bold; color:var(--accent); font-size:13px;">🚚 MODO MAPA</a>
-                <div id="chofer-status" style="font-weight:900; color:red; font-size:12px;">● GPS OFF</div>
-                <button onclick="logout()" style="background:none; border:none; color:#999; cursor:pointer; font-weight:bold;">SALIR</button>
+                <a href="chofer.html" target="_blank" class="btn" style="background: #f1f2f6; width: auto; padding: 8px 15px; color: #2d3436; text-decoration: none;">📱 VISTA MÓVIL</a>
+                <div id="chofer-status" style="font-weight:900; color:#ff7675; font-size:12px;">● GPS DESCONECTADO</div>
+                <button onclick="logout()" style="background:none; border:none; color:#b2bec3; cursor:pointer; font-weight:bold; font-size: 12px;">SALIR</button>
             </div>
         </div>
 
         <div class="sidebar">
             <div class="card">
-                <h4>➕ Registrar Cliente</h4>
-                <div class="form-group"><label>Nombre</label><input type="text" id="c-nombre"></div>
+                <h4 style="margin-top:0">📝 Registrar Cliente</h4>
+                <div class="form-group"><label>Nombre Completo</label><input type="text" id="c-nombre"></div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div class="form-group"><label>ID RapidPack</label><input type="text" id="c-id"></div>
                     <div class="form-group"><label>Teléfono</label><input type="text" id="c-tel"></div>
                 </div>
-                <div style="background:#f0f7ff; padding:10px; border-radius:10px; margin-bottom:10px;">
-                    <label>🏠 Dirección Casa</label>
-                    <input type="text" id="c-d1" placeholder="Dirección">
-                    <div style="display:flex; gap:5px; margin-top:5px;"><input type="text" id="c-lat1" placeholder="Lat"><input type="text" id="c-lng1" placeholder="Lng"></div>
+                <div style="background:#f1f9fe; padding:12px; border-radius:12px; margin-bottom:12px;">
+                    <label style="color: #0984e3;">🏠 Ubicación Casa</label>
+                    <input type="text" id="c-d1" placeholder="Dirección / Referencia" style="margin-bottom:8px;">
+                    <div style="display:flex; gap:5px;"><input type="text" id="c-lat1" placeholder="Lat"><input type="text" id="c-lng1" placeholder="Lng"></div>
                 </div>
-                <div style="background:#fef0ff; padding:10px; border-radius:10px;">
-                    <label>🏢 Dirección Trabajo</label>
-                    <input type="text" id="c-d2" placeholder="Dirección">
-                    <div style="display:flex; gap:5px; margin-top:5px;"><input type="text" id="c-lat2" placeholder="Lat"><input type="text" id="c-lng2" placeholder="Lng"></div>
+                <div style="background:#fdf1ff; padding:12px; border-radius:12px;">
+                    <label style="color: #6c5ce7;">🏢 Ubicación Trabajo</label>
+                    <input type="text" id="c-d2" placeholder="Dirección / Referencia" style="margin-bottom:8px;">
+                    <div style="display:flex; gap:5px;"><input type="text" id="c-lat2" placeholder="Lat"><input type="text" id="c-lng2" placeholder="Lng"></div>
                 </div>
                 <button onclick="guardarCliente()" class="btn btn-primary" style="margin-top:15px;">GUARDAR EN BASE DE DATOS</button>
             </div>
 
             <div class="card">
-                <h4>🔍 Buscar en Base de Datos</h4>
-                <input type="text" oninput="buscarDB()" id="buscador" placeholder="Escriba nombre o código...">
+                <h4 style="margin-top:0">🔍 Buscador Inteligente</h4>
+                <input type="text" oninput="buscarDB()" id="buscador" placeholder="Escribe nombre o código...">
                 <div id="res-busqueda" style="margin-top:15px;"></div>
             </div>
         </div>
@@ -107,25 +107,25 @@
                 <div id="map"></div>
                 <div class="progress-box">
                     <div id="progress-bar"></div>
-                    <div id="progress-text">ESPERANDO DESPACHO</div>
+                    <div id="progress-text">ESPERANDO SEÑAL DEL CAMIÓN</div>
                 </div>
             </div>
 
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h4>📍 Ruta de Hoy (<span id="count">0</span>)</h4>
+                    <h4 style="margin:0">📍 Hoja de Ruta (<span id="count">0</span>)</h4>
                     <div style="display:flex; gap:10px;">
                         <button onclick="optimizar()" class="btn btn-warn" style="width:auto; padding:8px 20px;">⚡ OPTIMIZAR</button>
-                        <button onclick="borrarRuta()" class="btn" style="background:#eee; width:auto; padding:8px 20px;">LIMPIAR</button>
+                        <button onclick="borrarRuta()" class="btn" style="background:#dfe6e9; width:auto; padding:8px 20px;">LIMPIAR</button>
                     </div>
                 </div>
-                <div id="lista-ruta" style="margin-top:15px; max-height:300px; overflow-y:auto;"></div>
+                <div id="lista-ruta" style="margin-top:15px; max-height:350px; overflow-y:auto; padding-right: 5px;"></div>
             </div>
 
             <div class="card">
-                <h4>📋 Reporte para el Chofer (WhatsApp)</h4>
-                <textarea id="output" rows="5" readonly></textarea>
-                <button onclick="copiarReporte()" class="btn btn-accent" style="margin-top:10px;">COPIAR REPORTE LIMPIO</button>
+                <h4 style="margin:0">📋 Reporte de Despacho (WhatsApp)</h4>
+                <textarea id="output" rows="6" readonly placeholder="Agrega clientes para generar el reporte..."></textarea>
+                <button onclick="copiarReporte()" class="btn btn-accent" style="margin-top:10px;">COPIAR REPORTE PARA EL CHOFER</button>
             </div>
         </div>
     </div>
@@ -138,7 +138,7 @@
     
     let map, markersLayer, choferMarker, ruta = [];
 
-    // --- AUTENTICACIÓN ---
+    // --- MANEJO DE SESIÓN ---
     db.auth.onAuthStateChange((e, s) => {
         if (s) {
             document.body.classList.replace('login-state', 'app-active');
@@ -157,21 +157,28 @@
             email: document.getElementById('email').value, 
             password: document.getElementById('password').value 
         });
-        if (error) alert("Acceso denegado");
+        if (error) document.getElementById('auth-error').innerText = "Credenciales incorrectas";
     }
     async function logout() { await db.auth.signOut(); }
 
     function iniciarApp() {
         if (map) return;
-        map = L.map('map').setView(SUCURSAL, 13);
+        map = L.map('map', { zoomControl: false }).setView(SUCURSAL, 13);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
         markersLayer = L.layerGroup().addTo(map);
-        choferMarker = L.marker(SUCURSAL, { icon: L.divIcon({ html: '🚚', className: 't', iconSize:[30,30] }) }).addTo(map);
-        L.marker(SUCURSAL).addTo(map).bindPopup("BASE RAPIDPACK");
+        
+        // Icono personalizado para el chofer
+        const truckIcon = L.divIcon({ html: '🚚', className: 'truck-marker', iconSize:[35,35], iconAnchor:[17,17] });
+        choferMarker = L.marker(SUCURSAL, { icon: truckIcon }).addTo(map);
+        
+        L.marker(SUCURSAL).addTo(map).bindPopup("<b>BASE RAPIDPACK</b>");
+        
         escucharChofer();
     }
 
-    // --- LÓGICA DE BASE DE DATOS ---
+    // --- GESTIÓN DE BASE DE DATOS ---
     async function guardarCliente() {
         const data = {
             nombre: document.getElementById('c-nombre').value,
@@ -184,13 +191,13 @@
             lng_2: parseFloat(document.getElementById('c-lng2').value)
         };
 
-        if(!data.nombre) return alert("El nombre es obligatorio");
+        if(!data.nombre) return alert("¡El nombre es obligatorio!");
         
         const { error } = await db.from('clientes').insert([data]);
-        if (error) alert("Error al guardar");
+        if (error) alert("Error al conectar con Supabase");
         else {
-            alert("Cliente guardado correctamente");
-            limpiarForm();
+            alert("✅ Cliente guardado en el sistema");
+            document.querySelectorAll('.sidebar input').forEach(i => i.value = "");
         }
     }
 
@@ -200,88 +207,125 @@
         const { data } = await db.from('clientes').select('*').or(`nombre.ilike.%${txt}%,codigo_rp.ilike.%${txt}%`).limit(5);
         const res = document.getElementById('res-busqueda'); res.innerHTML = "";
         data.forEach(cl => {
-            res.innerHTML += `<div class="item-cl" style="font-size:13px;">
-                <span><b>${cl.nombre}</b></span>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn btn-primary" style="padding:4px 8px; font-size:10px;" onclick='agregarARuta(${JSON.stringify(cl)}, 1)'>🏠</button>
-                    <button class="btn" style="background:#9c27b0; color:white; padding:4px 8px; font-size:10px;" onclick='agregarARuta(${JSON.stringify(cl)}, 2)'>🏢</button>
-                </div>
-            </div>`;
+            res.innerHTML += `
+                <div class="item-cl" style="font-size:12px;">
+                    <span><b>${cl.nombre}</b></span>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-circle" style="background:#e3f2fd; color:#1976d2" onclick='agregarARuta(${JSON.stringify(cl)}, 1)' title="Casa">🏠</button>
+                        <button class="btn-circle" style="background:#f3e5f5; color:#7b1fa2" onclick='agregarARuta(${JSON.stringify(cl)}, 2)' title="Trabajo">🏢</button>
+                    </div>
+                </div>`;
         });
     }
 
-    // --- LÓGICA DE RUTA ---
+    // --- CEREBRO DE RUTA Y PROXIMIDAD ---
     function agregarARuta(cl, tipo) {
         const lt = (tipo === 1) ? cl.lat : cl.lat_2;
         const lg = (tipo === 1) ? cl.lng : cl.lng_2;
-        if (!lt) return alert("Este destino no tiene coordenadas");
+        if (!lt || isNaN(lt)) return alert("Este destino no tiene coordenadas configuradas.");
         
-        ruta.push({ ...cl, aLat: lt, aLng: lg, tLabel: (tipo === 1 ? '🏠' : '🏢'), entregado: false });
+        ruta.push({ 
+            ...cl, 
+            aLat: lt, 
+            aLng: lg, 
+            tLabel: (tipo === 1 ? '🏠' : '🏢'), 
+            entregado: false 
+        });
         actualizarUI();
+    }
+
+    function calcularDistancia(la1, lo1, la2, lo2) {
+        const R = 6371000; // Radio tierra en metros
+        const dLat = (la2 - la1) * Math.PI / 180;
+        const dLon = (lo2 - lo1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(la1 * Math.PI / 180) * Math.cos(la2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function escucharChofer() {
+        // Canal de Realtime reforzado
+        db.channel('gps_realtime')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer', filter: 'id=eq.1' }, (payload) => {
+                const lat = payload.new.lat;
+                const lng = payload.new.lng;
+                
+                // Actualizar camión en mapa
+                choferMarker.setLatLng([lat, lng]);
+                document.getElementById('chofer-status').style.color = 'var(--primary)';
+                document.getElementById('chofer-status').innerText = '● CHOFER EN LÍNEA';
+
+                // Chequeo de proximidad automático
+                ruta.forEach((cl, i) => {
+                    if (!cl.entregado) {
+                        const d = calcularDistancia(lat, lng, cl.aLat, cl.aLng);
+                        if (d < 60) { // Margen de 60 metros para SDE
+                            ruta[i].entregado = true;
+                            actualizarUI();
+                        }
+                    }
+                });
+            })
+            .subscribe();
     }
 
     function actualizarUI() {
         const list = document.getElementById('lista-ruta');
         document.getElementById('count').innerText = ruta.length;
         list.innerHTML = ""; markersLayer.clearLayers();
-        let ents = 0, txt = "*RUTA RAPIDPACK S.D.E.*\n------------------------\n";
+        let ents = 0;
+        let txt = "*RUTA RAPIDPACK S.D.E.*\n------------------------\n";
 
         ruta.forEach((cl, i) => {
             if (cl.entregado) ents++;
-            list.innerHTML += `<div class="item-cl ${cl.entregado ? 'entregado' : ''}">
-                <span style="font-size:13px;">${i+1}. ${cl.tLabel} <b>${cl.nombre}</b></span>
-                <button onclick="ruta.splice(${i},1); actualizarUI();" style="border:none; background:none; color:red; cursor:pointer; font-weight:bold;">×</button>
-            </div>`;
+            list.innerHTML += `
+                <div class="item-cl ${cl.entregado ? 'entregado' : ''}">
+                    <span style="font-size:13px;">${i+1}. ${cl.tLabel} <b>${cl.nombre}</b></span>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        ${cl.entregado ? '<b style="color:var(--primary); font-size:10px;">LISTO</b>' : ''}
+                        <button onclick="ruta.splice(${i},1); actualizarUI();" style="border:none; background:none; color:#ff7675; cursor:pointer; font-size:16px;">×</button>
+                    </div>
+                </div>`;
             
-            L.circleMarker([cl.aLat, cl.aLng], { color: cl.entregado ? 'green' : 'red', radius: 8, fillOpacity: 0.8 }).addTo(markersLayer).bindPopup(cl.nombre);
-            txt += `${i+1}. ${cl.tLabel} ${cl.nombre} ${cl.entregado ? '✅' : ''}\n`;
+            L.circleMarker([cl.aLat, cl.aLng], { 
+                color: cl.entregado ? '#00c853' : '#ff7675', 
+                radius: 9, 
+                fillOpacity: 0.7 
+            }).addTo(markersLayer).bindPopup(`<b>${cl.nombre}</b><br>${cl.tLabel}`);
+            
+            txt += `${i+1}. ${cl.tLabel} ${cl.nombre} ${cl.entregado ? '✅' : '⏳'}\n`;
         });
 
         const porc = ruta.length > 0 ? Math.round((ents / ruta.length) * 100) : 0;
         document.getElementById('progress-bar').style.width = porc + "%";
-        document.getElementById('progress-text').innerText = `PROGRESO: ${ents}/${ruta.length} (${porc}%)`;
+        document.getElementById('progress-text').innerText = `COMPLETADO: ${ents}/${ruta.length} (${porc}%)`;
         document.getElementById('output').value = ruta.length > 0 ? txt : "";
     }
 
-    // --- RASTREO Y AUTO-CHECK ---
-    function escucharChofer() {
-        db.channel('rastreo').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, p => {
-            const lat = p.new.lat, lng = p.new.lng;
-            choferMarker.setLatLng([lat, lng]);
-            document.getElementById('chofer-status').style.color = 'var(--primary)';
-            document.getElementById('chofer-status').innerText = '● CHOFER ONLINE';
-
-            ruta.forEach((cl, i) => {
-                if (!cl.entregado) {
-                    const dist = Math.sqrt(Math.pow(lat - cl.aLat, 2) + Math.pow(lng - cl.aLng, 2)) * 111320; 
-                    if (dist < 50) { // Radio de 50 metros
-                        ruta[i].entregado = true;
-                        actualizarUI();
-                    }
-                }
-            });
-        }).subscribe();
-    }
-
     function optimizar() {
+        // Ordena de más cerca a más lejos respecto a la base
         ruta.sort((a,b) => {
-            const dA = Math.sqrt(Math.pow(a.aLat - SUCURSAL[0], 2) + Math.pow(a.aLng - SUCURSAL[1], 2));
-            const dB = Math.sqrt(Math.pow(b.aLat - SUCURSAL[0], 2) + Math.pow(b.lng - SUCURSAL[1], 2));
+            const dA = calcularDistancia(a.aLat, a.aLng, SUCURSAL[0], SUCURSAL[1]);
+            const dB = calcularDistancia(b.aLat, b.aLng, SUCURSAL[0], SUCURSAL[1]);
             return dA - dB;
         });
         actualizarUI();
     }
 
     function copiarReporte() {
-        const o = document.getElementById('output'); o.select(); document.execCommand('copy'); alert("Reporte copiado");
-    }
-
-    function limpiarForm() {
-        document.querySelectorAll('.sidebar input').forEach(i => i.value = "");
+        const o = document.getElementById('output');
+        if (!o.value) return alert("Agrega clientes a la ruta primero.");
+        o.select();
+        document.execCommand('copy');
+        alert("📋 Reporte copiado. Pégalo en el WhatsApp del chofer.");
     }
     
     function borrarRuta() {
-        if(confirm("¿Borrar toda la ruta de hoy?")) { ruta = []; actualizarUI(); }
+        if(confirm("¿Estás seguro de limpiar la ruta actual?")) {
+            ruta = [];
+            actualizarUI();
+        }
     }
 </script>
 </body>
