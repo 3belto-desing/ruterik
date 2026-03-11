@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro - Ruta Circular</title>
+    <title>Ruterik Pro - RapidPack</title>
     <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -28,7 +28,7 @@
         .btn-update { background: var(--accent); color: white; margin-bottom: 10px; }
         .btn-opt { background: #ff9800; color: white; font-size: 16px; box-shadow: 0 4px 10px rgba(255,152,0,0.4); }
 
-        /* MODAL */
+        /* MODAL AGENDA */
         #modal-agenda { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; align-items: center; justify-content: center; }
         .modal-content { background: white; width: 90%; max-width: 850px; height: 85vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
         .agenda-scroll { flex: 1; overflow-y: auto; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
@@ -41,7 +41,7 @@
         .btn-del { background: var(--danger); color: white; border: none; padding: 8px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; margin-left: 5px; }
 
         .item-ruta { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .item-base { border-left: 6px solid var(--dark); background: #eee; color: var(--dark); }
+        .item-base { border-left: 6px solid var(--dark); background: #eee; color: #777; font-size: 12px; }
         
         textarea { width: 100%; height: 130px; border-radius: 10px; border: 1px solid #ddd; padding: 12px; font-family: 'Segoe UI', sans-serif; resize: none; background: #fffde7; font-size: 14px; color: #2d3436; font-weight: 500; }
     </style>
@@ -51,7 +51,7 @@
     <div id="login-screen">
         <div class="login-card">
             <img src="logoCreator_imagetologo.jpg" width="100" style="border-radius: 15px; margin-bottom: 15px;">
-            <h2 style="margin:0 0 20px 0; color:var(--dark);">Ruterik Circular</h2>
+            <h2 style="margin:0 0 20px 0; color:var(--dark);">Ruterik Pro</h2>
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="pass" placeholder="Contraseña">
             <button class="btn btn-add" onclick="login()">ENTRAR</button>
@@ -62,7 +62,7 @@
     <div id="modal-agenda">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0;">🗂️ Agenda Completa de Clientes</h2>
+                <h2 style="margin:0;">🗂️ Agenda Completa</h2>
                 <button onclick="cerrarAgenda()" style="background:#eee; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">CERRAR</button>
             </div>
             <div class="agenda-scroll" id="lista-completa"></div>
@@ -86,30 +86,25 @@
                 <h3>🔍 Buscador Rápido</h3>
                 <input type="text" id="bus" oninput="buscar()" placeholder="Nombre o ID...">
                 <div id="res"></div>
-
                 <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-
                 <h3 id="form-title">🆕 Registro de Cliente</h3>
                 <input type="hidden" id="edit-id">
                 <input type="text" id="n-id" placeholder="Código RP">
                 <input type="text" id="n-nom" placeholder="Nombre completo">
                 <div style="display:flex; gap:8px;"><input id="n-lat1" placeholder="Casa Lat"><input id="n-lng1" placeholder="Casa Lng"></div>
                 <div style="display:flex; gap:8px;"><input id="n-lat2" placeholder="Trabajo Lat"><input id="n-lng2" placeholder="Trabajo Lng"></div>
-                
                 <button id="btn-save" class="btn btn-add" onclick="guardar()">GUARDAR</button>
                 <button id="btn-cancel" class="btn" style="display:none; background:#ccc; margin-top:5px;" onclick="cancelarEdicion()">CANCELAR</button>
             </div>
 
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="margin:0; border:0;">📍 Ruta Circular (<span id="count">0</span>)</h3>
-                    <button class="btn btn-opt" style="width:280px;" onclick="optimizar()">⚡ OPTIMIZAR (CIRCUITO)</button>
+                    <h3 style="margin:0; border:0;">📍 Ruta actual (<span id="count">0</span>)</h3>
+                    <button class="btn btn-opt" style="width:280px;" onclick="optimizar()">⚡ OPTIMIZAR ORDEN</button>
                 </div>
-                
                 <div id="lista" style="flex:1; overflow-y:auto; min-height:220px;"></div>
-
                 <div style="margin-top:15px; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd;">
-                    <h3 style="border:0">📋 Reporte para WhatsApp</h3>
+                    <h3 style="border:0">📋 Mensaje para WhatsApp</h3>
                     <textarea id="repo" readonly></textarea>
                     <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR REPORTE</button>
                 </div>
@@ -121,10 +116,10 @@
     const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
     const db = supabase.createClient(SB_URL, SB_KEY);
-    const BASE = { lat: 18.48774, lng: -69.85612 }; // RAPIDPACK SDE
+    const BASE = { lat: 18.48774, lng: -69.85612 };
     let ruta = [];
 
-    // --- SESION ---
+    // --- LOGIN ---
     async function login() {
         const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('pass').value });
         if (error) document.getElementById('error').innerText = "Acceso denegado";
@@ -165,7 +160,6 @@
     function add(c, tipo) {
         const lat = (tipo === "Casa") ? c.lat : c.lat_2;
         const lng = (tipo === "Casa") ? c.lng : c.lng_2;
-        if(!lat) return alert("Sin coordenadas.");
         ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat, lng, tipo });
         actualizar();
     }
@@ -181,23 +175,22 @@
         const f = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
         const s = hoy.getHours() < 12 ? "Buenos días" : (hoy.getHours() < 18 ? "Buenas tardes" : "Buenas noches");
         
-        // REPORTE WHATSAPP CON CIERRE DE CIRCUITO
+        // REPORTE WHATSAPP LIMPIO (SIN SALIDA/REGRESO)
         let txt = `*${s}, esta es la ruta para hoy ${f}:* \n----------------------------\n`;
-        txt += `0. 🏁 SALIDA: Base RapidPack\n`;
 
         ruta.forEach((c, i) => {
             l.innerHTML += `<div class="item-ruta"><span>${i+1}. ${c.nombre} <small style="color:#888">(${c.tipo})</small></span><button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; cursor:pointer; background:none;">X</button></div>`;
             txt += `${i+1}. ${c.nombre}\n`;
         });
 
+        // Solo en tu pantalla mostramos el regreso visual
         if(ruta.length > 0) {
-            l.innerHTML += `<div class="item-ruta item-base">🏁 REGRESO A BASE RAPIDPACK</div>`;
-            txt += `----------------------------\n🔚 FIN: Regreso a Base`;
+            l.innerHTML += `<div class="item-ruta item-base">🏁 Cierre de circuito hacia Base</div>`;
         }
         repo.value = ruta.length > 0 ? txt : "";
     }
 
-    // --- ALGORITMO CIRCULAR (OPTIMIZACIÓN) ---
+    // --- OPTIMIZACION CIRCULAR ---
     function optimizar() {
         if(ruta.length < 2) return;
         let opt = []; let cur = BASE; let copy = [...ruta];
@@ -210,7 +203,6 @@
             cur = copy[nIdx]; opt.push(copy.splice(nIdx, 1)[0]);
         }
         ruta = opt; actualizar();
-        alert("¡Circuito optimizado! El chofer terminará lo más cerca posible de la oficina.");
     }
 
     // --- CRUD Y EXTRAS ---
