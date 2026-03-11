@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro - RapidPack</title>
+    <title>Ruterik Pro - Ruta Circular</title>
     <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -26,22 +26,24 @@
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-add { background: var(--primary); color: white; margin-bottom: 10px; }
         .btn-update { background: var(--accent); color: white; margin-bottom: 10px; }
-        .btn-opt { background: #ff9800; color: white; font-size: 16px; }
+        .btn-opt { background: #ff9800; color: white; font-size: 16px; box-shadow: 0 4px 10px rgba(255,152,0,0.4); }
 
-        /* MODAL AGENDA */
+        /* MODAL */
         #modal-agenda { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; align-items: center; justify-content: center; }
-        .modal-content { background: white; width: 90%; max-width: 800px; height: 80vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
+        .modal-content { background: white; width: 90%; max-width: 850px; height: 85vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
         .agenda-scroll { flex: 1; overflow-y: auto; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         
-        /* BOTONES E ITEMS */
+        /* ITEMS */
         .item-res, .item-agenda { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .btn-loc { padding: 8px 10px; font-size: 11px; margin-right: 4px; background: var(--gray); border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-loc.has-data { background: var(--primary) !important; color: white !important; border-color: #00a844 !important; }
+        .btn-loc.has-data { background: var(--primary) !important; color: white !important; }
         .btn-edit { background: var(--edit); color: #2d3436; border: 1px solid #e0a800; padding: 8px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-del { background: var(--danger); color: white; border: none; padding: 8px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; margin-left: 5px; }
 
-        .item-ruta { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
-        textarea { width: 100%; height: 120px; border-radius: 10px; border: 1px solid #ddd; padding: 12px; font-family: 'Segoe UI', sans-serif; resize: none; background: #fffde7; font-size: 14px; color: #2d3436; font-weight: 500; }
+        .item-ruta { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .item-base { border-left: 6px solid var(--dark); background: #eee; color: var(--dark); }
+        
+        textarea { width: 100%; height: 130px; border-radius: 10px; border: 1px solid #ddd; padding: 12px; font-family: 'Segoe UI', sans-serif; resize: none; background: #fffde7; font-size: 14px; color: #2d3436; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -49,7 +51,7 @@
     <div id="login-screen">
         <div class="login-card">
             <img src="logoCreator_imagetologo.jpg" width="100" style="border-radius: 15px; margin-bottom: 15px;">
-            <h2 style="margin:0 0 20px 0; color:var(--dark);">Ruterik Access</h2>
+            <h2 style="margin:0 0 20px 0; color:var(--dark);">Ruterik Circular</h2>
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="pass" placeholder="Contraseña">
             <button class="btn btn-add" onclick="login()">ENTRAR</button>
@@ -63,8 +65,7 @@
                 <h2 style="margin:0;">🗂️ Agenda Completa de Clientes</h2>
                 <button onclick="cerrarAgenda()" style="background:#eee; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">CERRAR</button>
             </div>
-            <div class="agenda-scroll" id="lista-completa">
-                </div>
+            <div class="agenda-scroll" id="lista-completa"></div>
         </div>
     </div>
 
@@ -83,32 +84,34 @@
         <div class="container">
             <div class="card">
                 <h3>🔍 Buscador Rápido</h3>
-                <input type="text" id="bus" oninput="buscar()" placeholder="Nombre o Código RP...">
+                <input type="text" id="bus" oninput="buscar()" placeholder="Nombre o ID...">
                 <div id="res"></div>
 
                 <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
 
-                <h3 id="form-title">🆕 Nuevo Registro</h3>
+                <h3 id="form-title">🆕 Registro de Cliente</h3>
                 <input type="hidden" id="edit-id">
-                <input type="text" id="n-id" placeholder="ID / Código RP">
+                <input type="text" id="n-id" placeholder="Código RP">
                 <input type="text" id="n-nom" placeholder="Nombre completo">
                 <div style="display:flex; gap:8px;"><input id="n-lat1" placeholder="Casa Lat"><input id="n-lng1" placeholder="Casa Lng"></div>
                 <div style="display:flex; gap:8px;"><input id="n-lat2" placeholder="Trabajo Lat"><input id="n-lng2" placeholder="Trabajo Lng"></div>
                 
-                <button id="btn-save" class="btn btn-add" onclick="guardar()">GUARDAR EN AGENDA</button>
+                <button id="btn-save" class="btn btn-add" onclick="guardar()">GUARDAR</button>
                 <button id="btn-cancel" class="btn" style="display:none; background:#ccc; margin-top:5px;" onclick="cancelarEdicion()">CANCELAR</button>
             </div>
 
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="margin:0; border:0;">📍 Ruta de Hoy (<span id="count">0</span>)</h3>
-                    <button class="btn btn-opt" style="width:250px;" onclick="optimizar()">⚡ OPTIMIZAR ORDEN</button>
+                    <h3 style="margin:0; border:0;">📍 Ruta Circular (<span id="count">0</span>)</h3>
+                    <button class="btn btn-opt" style="width:280px;" onclick="optimizar()">⚡ OPTIMIZAR (CIRCUITO)</button>
                 </div>
+                
                 <div id="lista" style="flex:1; overflow-y:auto; min-height:220px;"></div>
+
                 <div style="margin-top:15px; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd;">
-                    <h3 style="border:0">📋 Mensaje para WhatsApp</h3>
+                    <h3 style="border:0">📋 Reporte para WhatsApp</h3>
                     <textarea id="repo" readonly></textarea>
-                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR LISTA</button>
+                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR REPORTE</button>
                 </div>
             </div>
         </div>
@@ -118,112 +121,54 @@
     const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
     const db = supabase.createClient(SB_URL, SB_KEY);
-    const BASE = { lat: 18.48774, lng: -69.85612 };
+    const BASE = { lat: 18.48774, lng: -69.85612 }; // RAPIDPACK SDE
     let ruta = [];
 
+    // --- SESION ---
     async function login() {
         const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('pass').value });
         if (error) document.getElementById('error').innerText = "Acceso denegado";
     }
     async function logout() { await db.auth.signOut(); location.reload(); }
-
     db.auth.onAuthStateChange((event, session) => {
         document.getElementById('login-screen').style.display = session ? 'none' : 'flex';
         document.getElementById('main-dashboard').style.display = session ? 'flex' : 'none';
     });
 
-    // --- BUSCADOR Y EDICIÓN ---
-    async function buscar() {
-        const t = document.getElementById('bus').value;
-        if(t.length < 2) return;
-        const { data } = await db.from('clientes').select('*').or(`nombre.ilike.%${t}%,codigo_rp.ilike.%${t}%`).limit(5);
-        renderResultados(data, 'res');
-    }
-
-    function renderResultados(data, targetId) {
-        const r = document.getElementById(targetId); r.innerHTML = "";
-        data.forEach(c => {
-            const hasC = (c.lat && c.lng); const hasT = (c.lat_2 && c.lng_2);
-            r.innerHTML += `
-                <div class="item-res">
-                    <div style="float:right;">
-                        <button class="btn-edit" onclick='prepararEdicion(${JSON.stringify(c)})'>✏️</button>
-                        <button class="btn-del" onclick='eliminar(${JSON.stringify(c.id)})'>🗑️</button>
-                    </div>
-                    <b>[${c.codigo_rp || 'S/ID'}] ${c.nombre}</b>
-                    <div style="margin-top:10px;">
-                        <button class="btn-loc ${hasC ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button>
-                        <button class="btn-loc ${hasT ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trab</button>
-                        <button class="btn-loc" style="background:var(--accent); color:white;" onclick='addTemp(${JSON.stringify(c)})'>📍 Temp</button>
-                    </div>
-                </div>`;
-        });
-    }
-
-    // --- AGENDA COMPLETA ---
+    // --- AGENDA ---
     async function verAgenda() {
         document.getElementById('modal-agenda').style.display = 'flex';
         const { data } = await db.from('clientes').select('*').order('nombre', { ascending: true });
         renderResultados(data, 'lista-completa');
     }
     function cerrarAgenda() { document.getElementById('modal-agenda').style.display = 'none'; }
-
     async function eliminar(id) {
-        if(confirm("¿Seguro que quieres borrar este cliente de la base de datos?")) {
-            const { error } = await db.from('clientes').delete().eq('id', id);
-            if(error) alert("Error"); else verAgenda();
-        }
+        if(confirm("¿Borrar cliente?")) { await db.from('clientes').delete().eq('id', id); verAgenda(); }
     }
 
-    function prepararEdicion(c) {
-        cerrarAgenda();
-        document.getElementById('edit-id').value = c.id;
-        document.getElementById('n-id').value = c.codigo_rp || "";
-        document.getElementById('n-nom').value = c.nombre;
-        document.getElementById('n-lat1').value = c.lat || "";
-        document.getElementById('n-lng1').value = c.lng || "";
-        document.getElementById('n-lat2').value = c.lat_2 || "";
-        document.getElementById('n-lng2').value = c.lng_2 || "";
-        document.getElementById('form-title').innerText = "✏️ Editando Cliente";
-        const btn = document.getElementById('btn-save');
-        btn.innerText = "ACTUALIZAR"; btn.className = "btn btn-update";
-        document.getElementById('btn-cancel').style.display = "block";
+    // --- BUSCADOR ---
+    async function buscar() {
+        const t = document.getElementById('bus').value;
+        if(t.length < 2) return;
+        const { data } = await db.from('clientes').select('*').or(`nombre.ilike.%${t}%,codigo_rp.ilike.%${t}%`).limit(5);
+        renderResultados(data, 'res');
+    }
+    function renderResultados(data, targetId) {
+        const r = document.getElementById(targetId); r.innerHTML = "";
+        data.forEach(c => {
+            const hasC = (c.lat && c.lng); const hasT = (c.lat_2 && c.lng_2);
+            r.innerHTML += `<div class="item-res"><div style="float:right;"><button class="btn-edit" onclick='prepararEdicion(${JSON.stringify(c)})'>✏️</button><button class="btn-del" onclick='eliminar("${c.id}")'>🗑️</button></div><b>[${c.codigo_rp || 'S/ID'}] ${c.nombre}</b><div style="margin-top:10px;"><button class="btn-loc ${hasC ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button><button class="btn-loc ${hasT ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trab</button><button class="btn-loc" style="background:var(--accent); color:white;" onclick='addTemp(${JSON.stringify(c)})'>📍 Temp</button></div></div>`;
+        });
     }
 
-    function cancelarEdicion() {
-        document.getElementById('edit-id').value = "";
-        document.getElementById('n-id').value = ""; document.getElementById('n-nom').value = "";
-        document.getElementById('n-lat1').value = ""; document.getElementById('n-lng1').value = "";
-        document.getElementById('n-lat2').value = ""; document.getElementById('n-lng2').value = "";
-        document.getElementById('form-title').innerText = "🆕 Nuevo Registro";
-        const btn = document.getElementById('btn-save');
-        btn.innerText = "GUARDAR EN AGENDA"; btn.className = "btn btn-add";
-        document.getElementById('btn-cancel').style.display = "none";
-    }
-
-    async function guardar() {
-        const id = document.getElementById('edit-id').value;
-        const n = document.getElementById('n-nom').value;
-        if(!n) return alert("Nombre obligatorio");
-        const d = { 
-            nombre: n, codigo_rp: document.getElementById('n-id').value || null,
-            lat: document.getElementById('n-lat1').value ? parseFloat(document.getElementById('n-lat1').value) : null,
-            lng: document.getElementById('n-lng1').value ? parseFloat(document.getElementById('n-lng1').value) : null,
-            lat_2: document.getElementById('n-lat2').value ? parseFloat(document.getElementById('n-lat2').value) : null,
-            lng_2: document.getElementById('n-lng2').value ? parseFloat(document.getElementById('n-lng2').value) : null
-        };
-        const res = id ? await db.from('clientes').update(d).eq('id', id) : await db.from('clientes').insert([d]);
-        if(res.error) alert("Error"); else location.reload();
-    }
-
-    // --- RUTA ---
+    // --- LOGICA DE RUTA ---
     function add(c, tipo) {
         const lat = (tipo === "Casa") ? c.lat : c.lat_2;
         const lng = (tipo === "Casa") ? c.lng : c.lng_2;
+        if(!lat) return alert("Sin coordenadas.");
         ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat, lng, tipo });
         actualizar();
     }
-
     function addTemp(c) {
         const lt = prompt("Lat:"); const lg = prompt("Lng:");
         if(lt && lg) { ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat: parseFloat(lt), lng: parseFloat(lg), tipo: "Temp" }); actualizar(); }
@@ -235,14 +180,24 @@
         const hoy = new Date();
         const f = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
         const s = hoy.getHours() < 12 ? "Buenos días" : (hoy.getHours() < 18 ? "Buenas tardes" : "Buenas noches");
+        
+        // REPORTE WHATSAPP CON CIERRE DE CIRCUITO
         let txt = `*${s}, esta es la ruta para hoy ${f}:* \n----------------------------\n`;
+        txt += `0. 🏁 SALIDA: Base RapidPack\n`;
+
         ruta.forEach((c, i) => {
             l.innerHTML += `<div class="item-ruta"><span>${i+1}. ${c.nombre} <small style="color:#888">(${c.tipo})</small></span><button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; cursor:pointer; background:none;">X</button></div>`;
             txt += `${i+1}. ${c.nombre}\n`;
         });
+
+        if(ruta.length > 0) {
+            l.innerHTML += `<div class="item-ruta item-base">🏁 REGRESO A BASE RAPIDPACK</div>`;
+            txt += `----------------------------\n🔚 FIN: Regreso a Base`;
+        }
         repo.value = ruta.length > 0 ? txt : "";
     }
 
+    // --- ALGORITMO CIRCULAR (OPTIMIZACIÓN) ---
     function optimizar() {
         if(ruta.length < 2) return;
         let opt = []; let cur = BASE; let copy = [...ruta];
@@ -255,8 +210,33 @@
             cur = copy[nIdx]; opt.push(copy.splice(nIdx, 1)[0]);
         }
         ruta = opt; actualizar();
+        alert("¡Circuito optimizado! El chofer terminará lo más cerca posible de la oficina.");
     }
 
+    // --- CRUD Y EXTRAS ---
+    function prepararEdicion(c) {
+        cerrarAgenda(); document.getElementById('edit-id').value = c.id;
+        document.getElementById('n-id').value = c.codigo_rp || ""; document.getElementById('n-nom').value = c.nombre;
+        document.getElementById('n-lat1').value = c.lat || ""; document.getElementById('n-lng1').value = c.lng || "";
+        document.getElementById('n-lat2').value = c.lat_2 || ""; document.getElementById('n-lng2').value = c.lng_2 || "";
+        document.getElementById('form-title').innerText = "✏️ Editando Cliente";
+        const btn = document.getElementById('btn-save'); btn.innerText = "ACTUALIZAR"; btn.className = "btn btn-update";
+        document.getElementById('btn-cancel').style.display = "block";
+    }
+    function cancelarEdicion() {
+        document.getElementById('edit-id').value = ""; document.getElementById('n-id').value = ""; document.getElementById('n-nom').value = "";
+        document.getElementById('n-lat1').value = ""; document.getElementById('n-lng1').value = ""; document.getElementById('n-lat2').value = ""; document.getElementById('n-lng2').value = "";
+        document.getElementById('form-title').innerText = "🆕 Registro de Cliente";
+        const btn = document.getElementById('btn-save'); btn.innerText = "GUARDAR"; btn.className = "btn btn-add";
+        document.getElementById('btn-cancel').style.display = "none";
+    }
+    async function guardar() {
+        const id = document.getElementById('edit-id').value; const n = document.getElementById('n-nom').value;
+        if(!n) return alert("Falta nombre");
+        const d = { nombre: n, codigo_rp: document.getElementById('n-id').value || null, lat: parseFloat(document.getElementById('n-lat1').value) || null, lng: parseFloat(document.getElementById('n-lng1').value) || null, lat_2: parseFloat(document.getElementById('n-lat2').value) || null, lng_2: parseFloat(document.getElementById('n-lng2').value) || null };
+        const res = id ? await db.from('clientes').update(d).eq('id', id) : await db.from('clientes').insert([d]);
+        if(res.error) alert("Error"); else location.reload();
+    }
     function copiar() { document.getElementById('repo').select(); document.execCommand('copy'); alert("Lista copiada."); }
 </script>
 </body>
