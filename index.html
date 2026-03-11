@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro - Acceso Privado</title>
+    <title>Ruterik Pro - RapidPack</title>
     <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -12,13 +12,13 @@
         body { 
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
-            background: #1a1a1b; /* Fondo oscuro mientras carga */
+            background: #1a1a1b;
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* PANTALLA DE LOGIN (Única visible al inicio) */
+        /* LOGIN SCREEN */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('unnamed.jpg');
@@ -30,9 +30,9 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
-        /* DASHBOARD (Oculto por defecto) */
+        /* DASHBOARD */
         #main-dashboard {
-            display: none; /* BLOQUEADO HASTA LOGIN */
+            display: none; 
             background: url('unnamed.jpg') no-repeat center center fixed;
             background-size: cover;
             height: 100vh;
@@ -54,9 +54,9 @@
         .btn-loc { padding: 6px 10px; font-size: 11px; margin-right: 5px; background: #f1f2f6; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
         .btn-loc:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
-        .item-ruta { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .item-ruta { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
         
-        textarea { width: 100%; height: 130px; border-radius: 10px; border: 1px solid #ddd; padding: 12px; font-family: monospace; resize: none; background: #fffde7; font-size: 13px; }
+        textarea { width: 100%; height: 130px; border-radius: 10px; border: 1px solid #ddd; padding: 12px; font-family: 'Segoe UI', sans-serif; resize: none; background: #fffde7; font-size: 14px; color: #2d3436; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -65,9 +65,9 @@
         <div class="login-card">
             <img src="logoCreator_imagetologo.jpg" width="100" style="border-radius: 15px; margin-bottom: 15px;">
             <h2 style="margin:0 0 20px 0; color:var(--dark);">Ruterik Access</h2>
-            <input type="email" id="email" placeholder="Email de RapidPack">
+            <input type="email" id="email" placeholder="Email">
             <input type="password" id="pass" placeholder="Contraseña">
-            <button class="btn btn-add" onclick="login()">INGRESAR AL SISTEMA</button>
+            <button class="btn btn-add" onclick="login()">ENTRAR</button>
             <p id="error" style="color:red; font-size:13px; font-weight:bold;"></p>
         </div>
     </div>
@@ -76,48 +76,39 @@
         <div class="header">
             <div style="display:flex; align-items:center; gap:12px;">
                 <img src="logoCreator_imagetologo.jpg" height="45" style="border-radius:8px;">
-                <span style="font-weight:900; font-size:22px; letter-spacing:1px;">RAPIDPACK <span style="color:var(--primary)">SDE</span></span>
+                <span style="font-weight:900; font-size:22px;">RAPIDPACK <span style="color:var(--primary)">SDE</span></span>
             </div>
             <button onclick="logout()" style="background:#ff5252; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Salir</button>
         </div>
 
         <div class="container">
             <div class="card">
-                <h3>🔍 Buscar Cliente en Agenda</h3>
-                <input type="text" id="bus" oninput="buscar()" placeholder="Nombre o Código RP...">
+                <h3>🔍 Agenda</h3>
+                <input type="text" id="bus" oninput="buscar()" placeholder="Buscar cliente...">
                 <div id="res"></div>
 
                 <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
 
-                <h3>🆕 Nuevo Cliente</h3>
+                <h3>🆕 Registro</h3>
                 <input type="text" id="n-id" placeholder="ID / Código RP">
                 <input type="text" id="n-nom" placeholder="Nombre completo">
-                
-                <div style="display:flex; gap:10px; margin-bottom:5px;">
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏠 CASA LAT</label><input id="n-lat1" placeholder="18.48..."></div>
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏠 CASA LNG</label><input id="n-lng1" placeholder="-69.85..."></div>
-                </div>
-                
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏢 TRABAJO LAT</label><input id="n-lat2" placeholder="18.48..."></div>
-                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏢 TRABAJO LNG</label><input id="n-lng2" placeholder="-69.85..."></div>
-                </div>
-                
-                <button class="btn btn-add" onclick="guardar()">GUARDAR EN BASE DE DATOS</button>
+                <div style="display:flex; gap:10px;"><input id="n-lat1" placeholder="Casa Lat"><input id="n-lng1" placeholder="Casa Lng"></div>
+                <div style="display:flex; gap:10px;"><input id="n-lat2" placeholder="Trabajo Lat"><input id="n-lng2" placeholder="Trabajo Lng"></div>
+                <button class="btn btn-add" onclick="guardar()">GUARDAR</button>
             </div>
 
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="margin:0; border:0;">📍 Paquetes en Ruta (<span id="count">0</span>)</h3>
-                    <button class="btn btn-opt" style="width:250px;" onclick="optimizar()">⚡ OPTIMIZAR ORDEN</button>
+                    <h3 style="margin:0; border:0;">📍 Ruta actual (<span id="count">0</span>)</h3>
+                    <button class="btn btn-opt" style="width:250px;" onclick="optimizar()">⚡ OPTIMIZAR</button>
                 </div>
 
                 <div id="lista" style="flex:1; overflow-y:auto; min-height:250px;"></div>
 
                 <div style="margin-top:20px; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd;">
-                    <h3 style="border:0">📋 Vista Previa del Reporte</h3>
+                    <h3 style="border:0">📋 Mensaje para WhatsApp</h3>
                     <textarea id="repo" readonly></textarea>
-                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR PARA WHATSAPP</button>
+                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR LISTA</button>
                 </div>
             </div>
         </div>
@@ -128,30 +119,25 @@
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
     const db = supabase.createClient(SB_URL, SB_KEY);
     const BASE = { lat: 18.48774, lng: -69.85612 };
-
     let ruta = [];
 
-    // --- SEGURIDAD ---
     async function login() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pass').value;
-        const { error } = await db.auth.signInWithPassword({ email: e, password: p });
-        if (error) document.getElementById('error').innerText = "Datos incorrectos";
+        const { error } = await db.auth.signInWithPassword({ 
+            email: document.getElementById('email').value, 
+            password: document.getElementById('pass').value 
+        });
+        if (error) document.getElementById('error').innerText = "Acceso denegado";
     }
 
     async function logout() { await db.auth.signOut(); location.reload(); }
 
     db.auth.onAuthStateChange((event, session) => {
-        if (session) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-dashboard').style.display = 'flex';
-        } else {
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('main-dashboard').style.display = 'none';
-        }
+        const ls = document.getElementById('login-screen');
+        const dbp = document.getElementById('main-dashboard');
+        ls.style.display = session ? 'none' : 'flex';
+        dbp.style.display = session ? 'flex' : 'none';
     });
 
-    // --- FUNCIONES ---
     async function buscar() {
         const t = document.getElementById('bus').value;
         if(t.length < 2) return;
@@ -160,7 +146,7 @@
         data.forEach(c => {
             r.innerHTML += `
                 <div class="item-res">
-                    <b>[${c.codigo_rp || 'N/A'}] ${c.nombre}</b>
+                    <b>[${c.codigo_rp || 'S/ID'}] ${c.nombre}</b>
                     <div style="margin-top:8px;">
                         <button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button>
                         <button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trabajo</button>
@@ -173,38 +159,37 @@
     function add(c, tipo) {
         const lat = (tipo === "Casa") ? c.lat : c.lat_2;
         const lng = (tipo === "Casa") ? c.lng : c.lng_2;
-        if(!lat) return alert("Esta ubicación no existe para este cliente.");
+        if(!lat) return alert("Ubicación no registrada.");
         ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat, lng, tipo });
         actualizar();
     }
 
     function addTemp(c) {
-        const lt = prompt("Latitud Temporal:");
-        const lg = prompt("Longitud Temporal:");
-        if(lt && lg) {
-            ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat: parseFloat(lt), lng: parseFloat(lg), tipo: "Temporal" });
-            actualizar();
-        }
+        const lt = prompt("Latitud:"); const lg = prompt("Longitud:");
+        if(lt && lg) { ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat: parseFloat(lt), lng: parseFloat(lg), tipo: "Temp" }); actualizar(); }
     }
 
     function actualizar() {
         const l = document.getElementById('lista');
         const repo = document.getElementById('repo');
-        l.innerHTML = ""; 
-        document.getElementById('count').innerText = ruta.length;
-
+        l.innerHTML = ""; document.getElementById('count').innerText = ruta.length;
+        
         const h = new Date().getHours();
         let saludo = h < 12 ? "Buenos días" : (h < 18 ? "Buenas tardes" : "Buenas noches");
         
+        // REPORTE LIMPIO: Solo nombre y saludo
         let txt = `*${saludo}, esta es la ruta para hoy:* \n----------------------------\n`;
 
         ruta.forEach((c, i) => {
+            // En tu pantalla sigues viendo el ID y Tipo para control
             l.innerHTML += `
                 <div class="item-ruta">
-                    <span>${i+1}. [${c.id}] ${c.nombre} <small>(${c.tipo})</small></span>
-                    <button onclick="ruta.splice(${i},1); actualizar();" style="background:none; border:none; color:red; font-weight:bold; cursor:pointer;">X</button>
+                    <span>${i+1}. [${c.id}] ${c.nombre} <small style="color:#888">(${c.tipo})</small></span>
+                    <button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; cursor:pointer; background:none;">X</button>
                 </div>`;
-            txt += `${i+1}. [${c.id}] ${c.nombre} (${c.tipo})\n`;
+            
+            // En el reporte de WhatsApp SOLO NOMBRE
+            txt += `${i+1}. ${c.nombre}\n`;
         });
         repo.value = ruta.length > 0 ? txt : "";
     }
@@ -233,14 +218,10 @@
             lng_2: parseFloat(document.getElementById('n-lng2').value)
         };
         const { error } = await db.from('clientes').insert([d]);
-        if(error) alert("Error al guardar cliente"); else { alert("Cliente registrado con éxito"); location.reload(); }
+        if(error) alert("Error"); else { alert("Guardado"); location.reload(); }
     }
 
-    function copiar() {
-        document.getElementById('repo').select();
-        document.execCommand('copy');
-        alert("Lista copiada. ¡Pégala en el WhatsApp del chofer!");
-    }
+    function copiar() { document.getElementById('repo').select(); document.execCommand('copy'); alert("¡Lista copiada!"); }
 </script>
 </body>
 </html>
