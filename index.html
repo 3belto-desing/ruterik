@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruterik Pro - RapidPack SDE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #00c853; --accent: #2196f3; --bg: #f1f2f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        
+        .header { background: #fff; padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
+        .main { display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
+        
+        .card { background: #fff; border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        h3 { margin-top: 0; color: #2d3436; font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-bottom: 10px; }
+        .btn-add { background: var(--primary); color: white; }
+        .btn-opt { background: #ff9800; color: white; font-size: 16px; height: 50px; }
+        .btn-copy { background: var(--accent); color: white; }
+
+        .list { flex: 1; overflow-y: auto; margin-top: 10px; }
+        .item { background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid var(--primary); font-weight: 600; }
+        .btn-del { color: #ff5252; background: none; border: none; font-size: 18px; cursor: pointer; }
+        
+        textarea { width: 100%; height: 150px; border-radius: 10px; border: 1px solid #ddd; padding: 10px; font-family: monospace; resize: none; background: #fff9c4; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div style="font-weight: 900; font-size: 24px;">RUTERIK <span style="color: var(--primary);">LOGISTICS</span></div>
+        <div style="color: #636e72; font-weight: bold;">Base: SDE (RapidPack)</div>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <h3>🔍 Cargar Clientes</h3>
+            <input type="text" id="bus" oninput="buscar()" placeholder="Buscar por nombre...">
+            <div id="res" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            
+            <h3>➕ Registro Rápido</h3>
+            <input type="text" id="n-nom" placeholder="Nombre completo">
+            <input type="text" id="n-lat" placeholder="Latitud (ej: 18.48)">
+            <input type="text" id="n-lng" placeholder="Longitud (ej: -69.85)">
+            <button class="btn btn-add" onclick="guardar()">GUARDAR EN AGENDA</button>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>📍 Ruta de Hoy (<span id="count">0</span>)</h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-opt" style="width: 200px;" onclick="optimizar()">⚡ OPTIMIZAR RUTA</button>
+                    <button class="btn" style="background: #eee; width: 100px;" onclick="limpiar()">BORRAR</button>
+                </div>
+            </div>
+
+            <div class="list" id="lista"></div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="border:none">📋 Reporte para WhatsApp</h3>
+                <textarea id="repo" readonly placeholder="El reporte se genera solo..."></textarea>
+                <button class="btn btn-copy" onclick="copiar()">COPIAR LISTA PARA EL CHOFER</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
+    const db = supabase.createClient(SB_URL, SB_KEY);
+    const BASE = { lat: 18.48774, lng: -69.85612 }; // RAPIDPACK SDE
+
+    let ruta = [];
+
+    async function buscar() {
+        const t = document.getElementById('bus').value;
+        if(t.length < 2) return;
+        const { data } = await db.from('clientes').select('*').ilike('nombre', `%${t}%`).limit(4);
+        const r = document.getElementById('res'); r.innerHTML = "";
+        data.forEach(c => {
+            r.innerHTML += `<div class="item" style="font-size:12px; background:#f1f2f6;">
+                ${c.nombre} <button onclick='add(${JSON.stringify(c)})' class="btn" style="width:60px; margin:0; padding:5px; background:var(--accent); color:white;">Add</button>
+            </div>`;
+        });
+    }
+
+    function add(c) { ruta.push(c); actualizar(); }
+
+    function actualizar() {
+        const l = document.getElementById('lista');
+        const count = document.getElementById('count');
+        const repo = document.getElementById('repo');
+        l.innerHTML = ""; 
+        count.innerText = ruta.length;
+        let txt = "*ORDEN DE ENTREGA RAPIDPACK*\n----------------------------\n";
+
+        ruta.forEach((c, i) => {
+            l.innerHTML += `<div class="item">
+                <span>${i+1}. ${c.nombre}</span>
+                <button onclick="ruta.splice(${i},1); actualizar();" class="btn-del">🗑️</button>
+            </div>`;
+            txt += `${i+1}. ${c.nombre}\n`;
+        });
+        repo.value = ruta.length > 0 ? txt : "";
+    }
+
+    function optimizar() {
+        if(ruta.length < 2) return;
+        let opt = [];
+        let cur = BASE;
+        let copy = [...ruta];
+
+        while(copy.length > 0) {
+            let nIdx = 0;
+            let minDist = Infinity;
+            copy.forEach((c, i) => {
+                let d = Math.sqrt(Math.pow(c.lat - cur.lat, 2) + Math.pow(c.lng - cur.lng, 2));
+                if(d < minDist) { minDist = d; nIdx = i; }
+            });
+            cur = copy[nIdx];
+            opt.push(copy.splice(nIdx, 1)[0]);
+        }
+        ruta = opt;
+        actualizar();
+        alert("¡Ruta organizada por cercanía!");
+    }
+
+    function copiar() {
+        const r = document.getElementById('repo');
+        r.select(); document.execCommand('copy');
+        alert("¡Copiado! Pégalo en el WhatsApp del chofer.");
+    }
+
+    async function guardar() {
+        const n = document.getElementById('n-nom').value;
+        const lt = parseFloat(document.getElementById('n-lat').value);
+        const lg = parseFloat(document.getElementById('n-lng').value);
+        if(!n || !lt || !lg) return alert("Faltan datos");
+        const { error } = await db.from('clientes').insert([{ nombre: n, lat: lt, lng: lg }]);
+        if(error) alert("Error");
+        else { alert("Cliente guardado"); location.reload(); }
+    }
+
+    function limpiar() { if(confirm("¿Vaciar ruta?")) { ruta = []; actualizar(); } }
+</script>
+</body>
+</html>
