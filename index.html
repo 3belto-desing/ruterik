@@ -8,54 +8,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #00c853; --accent: #2196f3; --dark: #2d3436; }
-        
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            margin: 0; 
-            background: #1a1a1b;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* LOGIN SCREEN */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('unnamed.jpg');
-            background-size: cover; background-position: center;
-            display: flex; align-items: center; justify-content: center; z-index: 10000;
-        }
-        .login-card {
-            background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        }
-
-        /* DASHBOARD */
-        #main-dashboard {
-            display: none; 
-            background: url('unnamed.jpg') no-repeat center center fixed;
-            background-size: cover;
-            height: 100vh;
-            flex-direction: column;
-        }
-
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #1a1a1b; height: 100vh; display: flex; flex-direction: column; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('unnamed.jpg'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .login-card { background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        #main-dashboard { display: none; background: url('unnamed.jpg') no-repeat center center fixed; background-size: cover; height: 100vh; flex-direction: column; }
         .header { background: rgba(255,255,255,0.9); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(5px); border-bottom: 3px solid var(--primary); }
         .container { display: grid; grid-template-columns: 400px 1fr; gap: 15px; padding: 15px; flex: 1; overflow: hidden; }
         .card { background: rgba(255,255,255,0.96); border-radius: 15px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); overflow-y: auto; }
-        
         h3 { margin: 0 0 10px 0; font-size: 16px; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
         input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-add { background: var(--primary); color: white; margin-bottom: 10px; }
         .btn-opt { background: #ff9800; color: white; font-size: 16px; }
-        
         .item-res { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 10px; margin-bottom: 8px; }
         .btn-loc { padding: 6px 10px; font-size: 11px; margin-right: 5px; background: #f1f2f6; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
-        .btn-loc:hover { background: var(--accent); color: white; border-color: var(--accent); }
-
         .item-ruta { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
-        
         textarea { width: 100%; height: 130px; border-radius: 10px; border: 1px solid #ddd; padding: 12px; font-family: 'Segoe UI', sans-serif; resize: none; background: #fffde7; font-size: 14px; color: #2d3436; font-weight: 500; }
     </style>
 </head>
@@ -86,9 +53,7 @@
                 <h3>🔍 Agenda</h3>
                 <input type="text" id="bus" oninput="buscar()" placeholder="Buscar cliente...">
                 <div id="res"></div>
-
                 <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-
                 <h3>🆕 Registro</h3>
                 <input type="text" id="n-id" placeholder="ID / Código RP">
                 <input type="text" id="n-nom" placeholder="Nombre completo">
@@ -102,9 +67,7 @@
                     <h3 style="margin:0; border:0;">📍 Ruta actual (<span id="count">0</span>)</h3>
                     <button class="btn btn-opt" style="width:250px;" onclick="optimizar()">⚡ OPTIMIZAR</button>
                 </div>
-
                 <div id="lista" style="flex:1; overflow-y:auto; min-height:250px;"></div>
-
                 <div style="margin-top:20px; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd;">
                     <h3 style="border:0">📋 Mensaje para WhatsApp</h3>
                     <textarea id="repo" readonly></textarea>
@@ -122,20 +85,15 @@
     let ruta = [];
 
     async function login() {
-        const { error } = await db.auth.signInWithPassword({ 
-            email: document.getElementById('email').value, 
-            password: document.getElementById('pass').value 
-        });
+        const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('pass').value });
         if (error) document.getElementById('error').innerText = "Acceso denegado";
     }
 
     async function logout() { await db.auth.signOut(); location.reload(); }
 
     db.auth.onAuthStateChange((event, session) => {
-        const ls = document.getElementById('login-screen');
-        const dbp = document.getElementById('main-dashboard');
-        ls.style.display = session ? 'none' : 'flex';
-        dbp.style.display = session ? 'flex' : 'none';
+        document.getElementById('login-screen').style.display = session ? 'none' : 'flex';
+        document.getElementById('main-dashboard').style.display = session ? 'flex' : 'none';
     });
 
     async function buscar() {
@@ -144,22 +102,17 @@
         const { data } = await db.from('clientes').select('*').or(`nombre.ilike.%${t}%,codigo_rp.ilike.%${t}%`).limit(5);
         const r = document.getElementById('res'); r.innerHTML = "";
         data.forEach(c => {
-            r.innerHTML += `
-                <div class="item-res">
-                    <b>[${c.codigo_rp || 'S/ID'}] ${c.nombre}</b>
-                    <div style="margin-top:8px;">
-                        <button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button>
-                        <button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trabajo</button>
-                        <button class="btn-loc" onclick='addTemp(${JSON.stringify(c)})'>📍 Temp</button>
-                    </div>
-                </div>`;
+            let btns = "";
+            if(c.lat && c.lng) btns += `<button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button>`;
+            if(c.lat_2 && c.lng_2) btns += `<button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trabajo</button>`;
+            btns += `<button class="btn-loc" onclick='addTemp(${JSON.stringify(c)})'>📍 Temp</button>`;
+            r.innerHTML += `<div class="item-res"><b>[${c.codigo_rp || 'S/ID'}] ${c.nombre}</b><div style="margin-top:8px;">${btns}</div></div>`;
         });
     }
 
     function add(c, tipo) {
         const lat = (tipo === "Casa") ? c.lat : c.lat_2;
         const lng = (tipo === "Casa") ? c.lng : c.lng_2;
-        if(!lat) return alert("Ubicación no registrada.");
         ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat, lng, tipo });
         actualizar();
     }
@@ -170,25 +123,21 @@
     }
 
     function actualizar() {
-        const l = document.getElementById('lista');
-        const repo = document.getElementById('repo');
+        const l = document.getElementById('lista'); const repo = document.getElementById('repo');
         l.innerHTML = ""; document.getElementById('count').innerText = ruta.length;
         
-        const h = new Date().getHours();
-        let saludo = h < 12 ? "Buenos días" : (h < 18 ? "Buenas tardes" : "Buenas noches");
+        // --- LOGICA DE FECHA Y SALUDO ---
+        const hoy = new Date();
+        const hora = hoy.getHours();
+        const opcionesFecha = { weekday: 'long', day: 'numeric', month: 'long' };
+        const fechaTexto = hoy.toLocaleDateString('es-ES', opcionesFecha);
         
-        // REPORTE LIMPIO: Solo nombre y saludo
-        let txt = `*${saludo}, esta es la ruta para hoy:* \n----------------------------\n`;
-
+        let saludo = hora < 12 ? "Buenos días" : (hora < 18 ? "Buenas tardes" : "Buenas noches");
+        
+        let txt = `*${saludo}, esta es la ruta para hoy ${fechaTexto}:* \n----------------------------\n`;
+        
         ruta.forEach((c, i) => {
-            // En tu pantalla sigues viendo el ID y Tipo para control
-            l.innerHTML += `
-                <div class="item-ruta">
-                    <span>${i+1}. [${c.id}] ${c.nombre} <small style="color:#888">(${c.tipo})</small></span>
-                    <button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; cursor:pointer; background:none;">X</button>
-                </div>`;
-            
-            // En el reporte de WhatsApp SOLO NOMBRE
+            l.innerHTML += `<div class="item-ruta"><span>${i+1}. ${c.nombre} <small style="color:#888">(${c.tipo})</small></span><button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; cursor:pointer; background:none;">X</button></div>`;
             txt += `${i+1}. ${c.nombre}\n`;
         });
         repo.value = ruta.length > 0 ? txt : "";
@@ -209,16 +158,16 @@
     }
 
     async function guardar() {
-        const d = {
-            nombre: document.getElementById('n-nom').value,
-            codigo_rp: document.getElementById('n-id').value,
-            lat: parseFloat(document.getElementById('n-lat1').value),
-            lng: parseFloat(document.getElementById('n-lng1').value),
-            lat_2: parseFloat(document.getElementById('n-lat2').value),
-            lng_2: parseFloat(document.getElementById('n-lng2').value)
-        };
+        const n = document.getElementById('n-nom').value;
+        const id = document.getElementById('n-id').value;
+        const l1 = document.getElementById('n-lat1').value;
+        const g1 = document.getElementById('n-lng1').value;
+        const l2 = document.getElementById('n-lat2').value;
+        const g2 = document.getElementById('n-lng2').value;
+        if(!n) return alert("El nombre es obligatorio");
+        const d = { nombre: n, codigo_rp: id || null, lat: l1 ? parseFloat(l1) : null, lng: g1 ? parseFloat(g1) : null, lat_2: l2 ? parseFloat(l2) : null, lng_2: g2 ? parseFloat(g2) : null };
         const { error } = await db.from('clientes').insert([d]);
-        if(error) alert("Error"); else { alert("Guardado"); location.reload(); }
+        if(error) alert("Error al guardar"); else { alert("Guardado con éxito"); location.reload(); }
     }
 
     function copiar() { document.getElementById('repo').select(); document.execCommand('copy'); alert("¡Lista copiada!"); }
