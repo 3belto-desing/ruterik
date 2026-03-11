@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro - RapidPack</title>
+    <title>Ruterik Pro - Acceso Privado</title>
     <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -12,100 +12,113 @@
         body { 
             font-family: 'Segoe UI', sans-serif; 
             margin: 0; 
-            background: url('unnamed.jpg') no-repeat center center fixed; 
-            background-size: cover;
+            background: #1a1a1b; /* Fondo oscuro mientras carga */
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* LOGIN OVERLAY */
-        #login-overlay {
+        /* PANTALLA DE LOGIN (Única visible al inicio) */
+        #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('unnamed.jpg');
+            background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; z-index: 10000;
         }
         .login-card {
-            background: white; padding: 30px; border-radius: 20px; width: 320px; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
-        /* HEADER */
-        .header { background: rgba(255,255,255,0.9); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(5px); }
+        /* DASHBOARD (Oculto por defecto) */
+        #main-dashboard {
+            display: none; /* BLOQUEADO HASTA LOGIN */
+            background: url('unnamed.jpg') no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .header { background: rgba(255,255,255,0.9); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(5px); border-bottom: 3px solid var(--primary); }
+        .container { display: grid; grid-template-columns: 400px 1fr; gap: 15px; padding: 15px; flex: 1; overflow: hidden; }
+        .card { background: rgba(255,255,255,0.96); border-radius: 15px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); overflow-y: auto; }
         
-        /* MAIN LAYOUT */
-        .container { display: grid; grid-template-columns: 380px 1fr; gap: 15px; padding: 15px; flex: 1; overflow: hidden; }
-        .card { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow-y: auto; }
+        h3 { margin: 0 0 10px 0; font-size: 16px; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+        input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         
-        h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
-        input, select { width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-add { background: var(--primary); color: white; margin-bottom: 10px; }
+        .btn-opt { background: #ff9800; color: white; font-size: 16px; }
         
-        .btn { border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
-        .btn-add { background: var(--primary); color: white; margin-bottom: 5px; }
-        .btn-opt { background: #ff9800; color: white; font-size: 16px; margin-bottom: 15px; }
+        .item-res { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 10px; margin-bottom: 8px; }
+        .btn-loc { padding: 6px 10px; font-size: 11px; margin-right: 5px; background: #f1f2f6; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
+        .btn-loc:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .item-ruta { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         
-        /* LISTAS */
-        .item-res { background: #fff; border: 1px solid #ddd; padding: 8px; border-radius: 8px; margin-bottom: 5px; font-size: 12px; }
-        .btn-loc { padding: 4px 8px; font-size: 10px; margin-right: 4px; background: #eee; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; }
-        
-        .item-ruta { background: #f1f2f6; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; }
-        
-        textarea { width: 100%; height: 120px; border-radius: 8px; border: 1px solid #ddd; padding: 10px; font-family: monospace; resize: none; background: #fff9c4; font-size: 12px; }
+        textarea { width: 100%; height: 130px; border-radius: 10px; border: 1px solid #ddd; padding: 12px; font-family: monospace; resize: none; background: #fffde7; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
+    <div id="login-screen">
         <div class="login-card">
-            <img src="logoCreator_imagetologo.jpg" width="80" style="border-radius: 10px;">
-            <h2>Ruterik Login</h2>
-            <input type="email" id="email" placeholder="Email">
+            <img src="logoCreator_imagetologo.jpg" width="100" style="border-radius: 15px; margin-bottom: 15px;">
+            <h2 style="margin:0 0 20px 0; color:var(--dark);">Ruterik Access</h2>
+            <input type="email" id="email" placeholder="Email de RapidPack">
             <input type="password" id="pass" placeholder="Contraseña">
-            <button class="btn btn-add" onclick="login()">ENTRAR</button>
-            <p id="error" style="color:red; font-size:12px;"></p>
+            <button class="btn btn-add" onclick="login()">INGRESAR AL SISTEMA</button>
+            <p id="error" style="color:red; font-size:13px; font-weight:bold;"></p>
         </div>
     </div>
 
-    <div class="header">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <img src="logoCreator_imagetologo.jpg" height="40" style="border-radius:5px;">
-            <span style="font-weight:900; font-size:20px;">RAPIDPACK SDE</span>
-        </div>
-        <button onclick="logout()" style="background:none; border:none; cursor:pointer; font-weight:bold; color:red;">Cerrar Sesión</button>
-    </div>
-
-    <div class="container">
-        <div class="card">
-            <h3>🔍 Cargar Clientes</h3>
-            <input type="text" id="bus" oninput="buscar()" placeholder="Buscar nombre o ID...">
-            <div id="res"></div>
-
-            <hr style="margin:15px 0;">
-
-            <h3>🆕 Registrar en Agenda</h3>
-            <input type="text" id="n-nom" placeholder="Nombre">
-            <input type="text" id="n-id" placeholder="ID / Código RP">
-            
-            <label style="font-size:10px; font-weight:bold;">📍 CASA</label>
-            <div style="display:flex; gap:5px;"><input id="n-lat1" placeholder="Lat"><input id="n-lng1" placeholder="Lng"></div>
-            
-            <label style="font-size:10px; font-weight:bold;">🏢 TRABAJO</label>
-            <div style="display:flex; gap:5px;"><input id="n-lat2" placeholder="Lat"><input id="n-lng2" placeholder="Lng"></div>
-            
-            <button class="btn btn-add" onclick="guardar()">GUARDAR CLIENTE</button>
+    <div id="main-dashboard">
+        <div class="header">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="logoCreator_imagetologo.jpg" height="45" style="border-radius:8px;">
+                <span style="font-weight:900; font-size:22px; letter-spacing:1px;">RAPIDPACK <span style="color:var(--primary)">SDE</span></span>
+            </div>
+            <button onclick="logout()" style="background:#ff5252; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Salir</button>
         </div>
 
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>📍 Ruta de Hoy (<span id="count">0</span>)</h3>
-                <button class="btn btn-opt" style="width:220px;" onclick="optimizar()">⚡ OPTIMIZAR POR CERCANÍA</button>
+        <div class="container">
+            <div class="card">
+                <h3>🔍 Buscar Cliente en Agenda</h3>
+                <input type="text" id="bus" oninput="buscar()" placeholder="Nombre o Código RP...">
+                <div id="res"></div>
+
+                <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+
+                <h3>🆕 Nuevo Cliente</h3>
+                <input type="text" id="n-id" placeholder="ID / Código RP">
+                <input type="text" id="n-nom" placeholder="Nombre completo">
+                
+                <div style="display:flex; gap:10px; margin-bottom:5px;">
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏠 CASA LAT</label><input id="n-lat1" placeholder="18.48..."></div>
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏠 CASA LNG</label><input id="n-lng1" placeholder="-69.85..."></div>
+                </div>
+                
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏢 TRABAJO LAT</label><input id="n-lat2" placeholder="18.48..."></div>
+                    <div style="flex:1;"><label style="font-size:10px; font-weight:bold;">🏢 TRABAJO LNG</label><input id="n-lng2" placeholder="-69.85..."></div>
+                </div>
+                
+                <button class="btn btn-add" onclick="guardar()">GUARDAR EN BASE DE DATOS</button>
             </div>
 
-            <div id="lista" style="flex:1; overflow-y:auto; min-height:200px;"></div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; border:0;">📍 Paquetes en Ruta (<span id="count">0</span>)</h3>
+                    <button class="btn btn-opt" style="width:250px;" onclick="optimizar()">⚡ OPTIMIZAR ORDEN</button>
+                </div>
 
-            <div style="margin-top:15px;">
-                <h3>📋 Reporte WhatsApp</h3>
-                <textarea id="repo" readonly></textarea>
-                <button class="btn" style="background:var(--accent); color:white;" onclick="copiar()">COPIAR REPORTE</button>
+                <div id="lista" style="flex:1; overflow-y:auto; min-height:250px;"></div>
+
+                <div style="margin-top:20px; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd;">
+                    <h3 style="border:0">📋 Vista Previa del Reporte</h3>
+                    <textarea id="repo" readonly></textarea>
+                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR PARA WHATSAPP</button>
+                </div>
             </div>
         </div>
     </div>
@@ -118,22 +131,27 @@
 
     let ruta = [];
 
-    // --- AUTENTICACIÓN ---
+    // --- SEGURIDAD ---
     async function login() {
-        const { error } = await db.auth.signInWithPassword({
-            email: document.getElementById('email').value,
-            password: document.getElementById('pass').value
-        });
-        if (error) document.getElementById('error').innerText = "Acceso denegado";
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        const { error } = await db.auth.signInWithPassword({ email: e, password: p });
+        if (error) document.getElementById('error').innerText = "Datos incorrectos";
     }
 
     async function logout() { await db.auth.signOut(); location.reload(); }
 
     db.auth.onAuthStateChange((event, session) => {
-        if (session) document.getElementById('login-overlay').style.display = 'none';
+        if (session) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-dashboard').style.display = 'flex';
+        } else {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-dashboard').style.display = 'none';
+        }
     });
 
-    // --- BUSCADOR ---
+    // --- FUNCIONES ---
     async function buscar() {
         const t = document.getElementById('bus').value;
         if(t.length < 2) return;
@@ -142,11 +160,11 @@
         data.forEach(c => {
             r.innerHTML += `
                 <div class="item-res">
-                    <b>${c.codigo_rp || 'S/ID'} - ${c.nombre}</b><br>
-                    <div style="margin-top:5px;">
+                    <b>[${c.codigo_rp || 'N/A'}] ${c.nombre}</b>
+                    <div style="margin-top:8px;">
                         <button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button>
                         <button class="btn-loc" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trabajo</button>
-                        <button class="btn-loc" onclick='addTemp(${JSON.stringify(c)})'>📍 Temporal</button>
+                        <button class="btn-loc" onclick='addTemp(${JSON.stringify(c)})'>📍 Temp</button>
                     </div>
                 </div>`;
         });
@@ -155,16 +173,16 @@
     function add(c, tipo) {
         const lat = (tipo === "Casa") ? c.lat : c.lat_2;
         const lng = (tipo === "Casa") ? c.lng : c.lng_2;
-        if(!lat) return alert("Esta ubicación no está registrada.");
+        if(!lat) return alert("Esta ubicación no existe para este cliente.");
         ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat, lng, tipo });
         actualizar();
     }
 
     function addTemp(c) {
-        const lat = prompt("Introduce Latitud Temporal:");
-        const lng = prompt("Introduce Longitud Temporal:");
-        if(lat && lng) {
-            ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat: parseFloat(lat), lng: parseFloat(lng), tipo: "Temporal" });
+        const lt = prompt("Latitud Temporal:");
+        const lg = prompt("Longitud Temporal:");
+        if(lt && lg) {
+            ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat: parseFloat(lt), lng: parseFloat(lg), tipo: "Temporal" });
             actualizar();
         }
     }
@@ -175,19 +193,16 @@
         l.innerHTML = ""; 
         document.getElementById('count').innerText = ruta.length;
 
-        // Determinar saludo según hora
-        const hora = new Date().getHours();
-        let saludo = "Buenos días";
-        if (hora >= 12 && hora < 18) saludo = "Buenas tardes";
-        if (hora >= 18) saludo = "Buenas noches";
-
+        const h = new Date().getHours();
+        let saludo = h < 12 ? "Buenos días" : (h < 18 ? "Buenas tardes" : "Buenas noches");
+        
         let txt = `*${saludo}, esta es la ruta para hoy:* \n----------------------------\n`;
 
         ruta.forEach((c, i) => {
             l.innerHTML += `
                 <div class="item-ruta">
-                    <span><b>${i+1}.</b> [${c.id || 'N/A'}] ${c.nombre} (${c.tipo})</span>
-                    <button onclick="ruta.splice(${i},1); actualizar();" style="border:none; cursor:pointer;">❌</button>
+                    <span>${i+1}. [${c.id}] ${c.nombre} <small>(${c.tipo})</small></span>
+                    <button onclick="ruta.splice(${i},1); actualizar();" style="background:none; border:none; color:red; font-weight:bold; cursor:pointer;">X</button>
                 </div>`;
             txt += `${i+1}. [${c.id}] ${c.nombre} (${c.tipo})\n`;
         });
@@ -196,13 +211,11 @@
 
     function optimizar() {
         if(ruta.length < 2) return;
-        let opt = [];
-        let cur = BASE;
-        let copy = [...ruta];
+        let opt = []; let cur = BASE; let copy = [...ruta];
         while(copy.length > 0) {
             let nIdx = 0; let minDist = Infinity;
             copy.forEach((c, i) => {
-                let d = Math.sqrt(Math.pow(c.lat - cur.lat, 2) + Math.pow(c.lng - cur.lng, 2));
+                let d = Math.sqrt(Math.pow(c.lat-cur.lat,2) + Math.pow(c.lng-cur.lng,2));
                 if(d < minDist) { minDist = d; nIdx = i; }
             });
             cur = copy[nIdx]; opt.push(copy.splice(nIdx, 1)[0]);
@@ -220,13 +233,13 @@
             lng_2: parseFloat(document.getElementById('n-lng2').value)
         };
         const { error } = await db.from('clientes').insert([d]);
-        if(error) alert("Error al guardar"); else { alert("Guardado"); location.reload(); }
+        if(error) alert("Error al guardar cliente"); else { alert("Cliente registrado con éxito"); location.reload(); }
     }
 
     function copiar() {
         document.getElementById('repo').select();
         document.execCommand('copy');
-        alert("Reporte copiado");
+        alert("Lista copiada. ¡Pégala en el WhatsApp del chofer!");
     }
 </script>
 </body>
