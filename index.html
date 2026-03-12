@@ -28,6 +28,10 @@
         .btn-update { background: var(--accent); color: white; margin-bottom: 10px; }
         .btn-opt { background: #ff9800; color: white; font-size: 16px; box-shadow: 0 4px 10px rgba(255,152,0,0.4); }
 
+        /* WIDGET RASTREO */
+        .btn-tracker { background: #4285F4; color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .btn-tracker:hover { background: #357ae8; }
+
         /* MODAL AGENDA */
         #modal-agenda { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; align-items: center; justify-content: center; }
         .modal-content { background: white; width: 90%; max-width: 850px; height: 85vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
@@ -75,9 +79,13 @@
                 <img src="logoCreator_imagetologo.jpg" height="45" style="border-radius:8px;">
                 <span style="font-weight:900; font-size:22px;">RAPIDPACK <span style="color:var(--primary)">SDE</span></span>
             </div>
-            <div style="display:flex; gap:10px;">
+            
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button onclick="abrirRastreo()" class="btn-tracker">
+                    📍 <span>Rastrear Chofer</span>
+                </button>
                 <button onclick="verAgenda()" style="background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">🗂️ CLIENTES</button>
-                <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">SALIR</button>
+                <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:10px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">SALIR</button>
             </div>
         </div>
 
@@ -106,7 +114,7 @@
                 <div style="margin-top:15px; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd;">
                     <h3 style="border:0">📋 Mensaje para WhatsApp</h3>
                     <textarea id="repo" readonly></textarea>
-                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR REPORTE</button>
+                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR LISTA</button>
                 </div>
             </div>
         </div>
@@ -118,6 +126,19 @@
     const db = supabase.createClient(SB_URL, SB_KEY);
     const BASE = { lat: 18.48774, lng: -69.85612 };
     let ruta = [];
+
+    // --- RASTREO WIDGET ---
+    function abrirRastreo() {
+        let link = localStorage.getItem('chofer_link');
+        if (!link || link === "null") {
+            link = prompt("Pega aquí el Link de Ubicación Compartida de Google Maps del chofer:");
+            if (link) localStorage.setItem('chofer_link', link);
+        }
+        if (link) {
+            // Abre una ventana pequeña tipo "Widget"
+            window.open(link, 'ChoferTracker', 'width=450,height=600,left=1000,top=100');
+        }
+    }
 
     // --- LOGIN ---
     async function login() {
@@ -175,22 +196,15 @@
         const f = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
         const s = hoy.getHours() < 12 ? "Buenos días" : (hoy.getHours() < 18 ? "Buenas tardes" : "Buenas noches");
         
-        // REPORTE WHATSAPP LIMPIO (SIN SALIDA/REGRESO)
         let txt = `*${s}, esta es la ruta para hoy ${f}:* \n----------------------------\n`;
-
         ruta.forEach((c, i) => {
             l.innerHTML += `<div class="item-ruta"><span>${i+1}. ${c.nombre} <small style="color:#888">(${c.tipo})</small></span><button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; cursor:pointer; background:none;">X</button></div>`;
             txt += `${i+1}. ${c.nombre}\n`;
         });
-
-        // Solo en tu pantalla mostramos el regreso visual
-        if(ruta.length > 0) {
-            l.innerHTML += `<div class="item-ruta item-base">🏁 Cierre de circuito hacia Base</div>`;
-        }
+        if(ruta.length > 0) l.innerHTML += `<div class="item-ruta item-base">🏁 Cierre de circuito hacia Base</div>`;
         repo.value = ruta.length > 0 ? txt : "";
     }
 
-    // --- OPTIMIZACION CIRCULAR ---
     function optimizar() {
         if(ruta.length < 2) return;
         let opt = []; let cur = BASE; let copy = [...ruta];
@@ -205,7 +219,7 @@
         ruta = opt; actualizar();
     }
 
-    // --- CRUD Y EXTRAS ---
+    // --- CRUD ---
     function prepararEdicion(c) {
         cerrarAgenda(); document.getElementById('edit-id').value = c.id;
         document.getElementById('n-id').value = c.codigo_rp || ""; document.getElementById('n-nom').value = c.nombre;
