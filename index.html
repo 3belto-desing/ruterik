@@ -3,118 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro - RapidPack SDE</title>
+    <title>Ruterik Pro - Control Inteligente</title>
     <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { --primary: #00c853; --accent: #2196f3; --dark: #2d3436; --gray: #f1f2f6; --edit: #ffc107; --danger: #ff5252; --success: #4caf50; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #1a1a1b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* PANTALLA LOGIN */
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('unnamed.jpg'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        .login-card { background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('unnamed.jpg'); background-size: cover; display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        #main-dashboard { display: none; background: url('unnamed.jpg') no-repeat center fixed; background-size: cover; height: 100vh; flex-direction: column; }
         
-        /* DASHBOARD PRINCIPAL */
-        #main-dashboard { display: none; background: url('unnamed.jpg') no-repeat center center fixed; background-size: cover; height: 100vh; flex-direction: column; }
-        .header { background: rgba(255,255,255,0.92); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); border-bottom: 3px solid var(--primary); }
+        .header { background: rgba(255,255,255,0.92); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
         .container { display: grid; grid-template-columns: 410px 1fr; gap: 15px; padding: 15px; flex: 1; overflow: hidden; }
         .card { background: rgba(255,255,255,0.96); border-radius: 18px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow-y: auto; }
         
-        /* UI ELEMENTOS */
-        h3 { margin: 0 0 12px 0; font-size: 16px; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 6px; }
-        input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
-        .btn-add { background: var(--primary); color: white; margin-bottom: 10px; }
-        .btn-opt { background: #ff9800; color: white; font-size: 16px; box-shadow: 0 4px 12px rgba(255,152,0,0.4); }
+        /* MAPA ESTILO WIDGET */
+        #mapa-chofer { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--accent); display: none; }
 
-        /* LISTA RUTA E INTELIGENCIA */
-        .item-ruta { background: white; padding: 14px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; transition: 0.4s; }
+        .item-ruta { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 6px solid var(--primary); display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
         .item-ruta.llegando { background: #e8f5e9; border-left-color: var(--success); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0px rgba(76,175,80,0.4); } 50% { box-shadow: 0 0 20px rgba(76,175,80,0.7); } 100% { box-shadow: 0 0 0px rgba(76,175,80,0.4); } }
-        .item-base { border-left-color: var(--dark); background: #eee; color: #777; font-size: 12px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
+        .btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 8px; }
+        input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        textarea { width: 100%; height: 100px; border-radius: 12px; padding: 12px; background: #fffde7; resize: none; font-size: 13px; }
+        
         /* MODAL AGENDA */
         #modal-agenda { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; }
-        .modal-content { background: white; width: 90%; max-width: 900px; height: 85vh; border-radius: 25px; padding: 30px; display: flex; flex-direction: column; }
-        .agenda-scroll { flex: 1; overflow-y: auto; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
-
-        /* BOTONES BUSQUEDA */
-        .item-res { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
-        .btn-loc { padding: 8px 12px; font-size: 11px; margin-right: 5px; background: var(--gray); border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-loc.has-data { background: var(--primary) !important; color: white !important; border-color: #00a844 !important; }
-        .btn-edit { background: var(--edit); border: 1px solid #e0a800; padding: 8px 12px; font-size: 11px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-del { background: var(--danger); color: white; border: none; padding: 8px 12px; font-size: 11px; border-radius: 6px; cursor: pointer; margin-left: 5px; }
-
-        textarea { width: 100%; height: 120px; border-radius: 12px; border: 1px solid #ddd; padding: 15px; font-family: inherit; resize: none; background: #fffde7; font-size: 14px; font-weight: 500; }
+        .modal-content { background: white; width: 90%; max-width: 800px; height: 80vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div class="login-card">
-            <img src="logoCreator_imagetologo.jpg" width="100" style="border-radius: 15px; margin-bottom: 15px;">
-            <h2 style="margin:0 0 20px 0; color:var(--dark);">Ruterik Pro Access</h2>
-            <input type="email" id="email" placeholder="Email de RapidPack">
-            <input type="password" id="pass" placeholder="Contraseña">
-            <button class="btn btn-add" onclick="login()">INGRESAR AL SISTEMA</button>
-            <p id="error" style="color:red; font-size:13px; font-weight:bold;"></p>
+        <div style="background:white; padding:40px; border-radius:20px; text-align:center; width:300px;">
+            <img src="logoCreator_imagetologo.jpg" width="80" style="border-radius:10px;">
+            <h2>Ruterik Admin</h2>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="pass" placeholder="Password">
+            <button class="btn" style="background:var(--primary); color:white;" onclick="login()">ENTRAR</button>
         </div>
     </div>
 
     <div id="modal-agenda">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0;">🗂️ Agenda Completa de Clientes</h2>
-                <button onclick="cerrarAgenda()" style="background:var(--dark); color:white; border:none; padding:10px 25px; border-radius:12px; cursor:pointer; font-weight:bold;">CERRAR</button>
+                <h3>🗂️ Agenda Completa</h3>
+                <button onclick="cerrarAgenda()">CERRAR</button>
             </div>
-            <div class="agenda-scroll" id="lista-completa"></div>
+            <div id="lista-completa" style="overflow-y:auto; margin-top:15px;"></div>
         </div>
     </div>
 
     <div id="main-dashboard">
         <div class="header">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <img src="logoCreator_imagetologo.jpg" height="45" style="border-radius:8px;">
-                <span style="font-weight:900; font-size:22px; letter-spacing:1px;">RAPIDPACK <span style="color:var(--primary)">SDE</span></span>
-                <span id="gps-status" style="font-size:10px; background:#e3f2fd; color:var(--accent); padding:4px 10px; border-radius:20px; font-weight:bold; display:none;">📡 CHOFER ACTIVO</span>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="logoCreator_imagetologo.jpg" height="40" style="border-radius:8px;">
+                <span style="font-weight:900; font-size:22px;">RAPIDPACK <span style="color:var(--primary)">SDE</span></span>
             </div>
-            <div style="display:flex; gap:12px;">
-                <button onclick="abrirRastreo()" style="background:#4285F4; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">📍 RASTREAR</button>
-                <button onclick="verAgenda()" style="background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">🗂️ CLIENTES</button>
-                <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:10px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">SALIR</button>
+            <div style="display:flex; gap:10px;">
+                <button onclick="toggleMapa()" style="background:#4285F4; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;">🛰️ VER CHOFER</button>
+                <button onclick="verAgenda()" style="background:var(--accent); color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;">🗂️ CLIENTES</button>
+                <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;">SALIR</button>
             </div>
         </div>
 
         <div class="container">
             <div class="card">
-                <h3>🔍 Buscador de Agenda</h3>
-                <input type="text" id="bus" oninput="buscar()" placeholder="Buscar por nombre o ID...">
-                <div id="res"></div>
-
-                <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-
-                <h3 id="form-title">🆕 Registro / Edición</h3>
-                <input type="hidden" id="edit-id">
-                <input type="text" id="n-id" placeholder="Código RP (ID)">
-                <input type="text" id="n-nom" placeholder="Nombre completo">
-                <div style="display:flex; gap:10px;"><input id="n-lat1" placeholder="Casa Lat"><input id="n-lng1" placeholder="Casa Lng"></div>
-                <div style="display:flex; gap:10px;"><input id="n-lat2" placeholder="Trabajo Lat"><input id="n-lng2" placeholder="Trabajo Lng"></div>
+                <div id="mapa-chofer"></div>
                 
-                <button id="btn-save" class="btn btn-add" onclick="guardar()">GUARDAR EN BASE DE DATOS</button>
-                <button id="btn-cancel" class="btn" style="display:none; background:#ccc; margin-top:5px;" onclick="cancelarEdicion()">CANCELAR</button>
+                <h3>🔍 Buscador</h3>
+                <input type="text" id="bus" oninput="buscar()" placeholder="Nombre o ID...">
+                <div id="res"></div>
+                <hr>
+                <h3 id="form-title">🆕 Registro</h3>
+                <input type="hidden" id="edit-id">
+                <input type="text" id="n-id" placeholder="ID / Código RP">
+                <input type="text" id="n-nom" placeholder="Nombre completo">
+                <div style="display:flex; gap:5px;"><input id="n-lat1" placeholder="Casa Lat"><input id="n-lng1" placeholder="Casa Lng"></div>
+                <div style="display:flex; gap:5px;"><input id="n-lat2" placeholder="Trabajo Lat"><input id="n-lng2" placeholder="Trabajo Lng"></div>
+                <button id="btn-save" class="btn" style="background:var(--primary); color:white;" onclick="guardar()">GUARDAR</button>
+                <button id="btn-cancel" class="btn" style="display:none; background:#ccc;" onclick="cancelarEdicion()">CANCELAR</button>
             </div>
 
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="margin:0; border:0;">📍 Ruta Optimizada (<span id="count">0</span>)</h3>
-                    <button class="btn btn-opt" style="width:300px;" onclick="optimizar()">⚡ OPTIMIZAR (CIRCULAR)</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="margin:0;">📍 Ruta de Hoy (<span id="count">0</span>)</h3>
+                    <button class="btn" style="background:#ff9800; color:white; width:250px; margin:0;" onclick="optimizar()">⚡ OPTIMIZAR ORDEN</button>
                 </div>
                 <div id="lista" style="flex:1; overflow-y:auto; min-height:250px;"></div>
-                <div style="margin-top:20px;">
-                    <h3>📋 Mensaje de WhatsApp</h3>
-                    <textarea id="repo" readonly></textarea>
-                    <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR REPORTE LIMPIO</button>
-                </div>
+                <textarea id="repo" readonly></textarea>
+                <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR WHATSAPP</button>
             </div>
         </div>
     </div>
@@ -125,34 +106,51 @@
     const db = supabase.createClient(SB_URL, SB_KEY);
     const BASE = { lat: 18.48774, lng: -69.85612 };
     let ruta = [];
-    let choferLoc = null;
+    let map, markerChofer;
 
-    // --- REALTIME: AUTO-CHECKIN ---
-    const monitor = db.channel('gps').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, payload => {
-        choferLoc = { lat: payload.new.lat, lng: payload.new.lng };
-        document.getElementById('gps-status').style.display = 'inline-block';
-        verificarProximidad();
+    // --- INICIALIZAR MAPA ---
+    function initMap() {
+        if (map) return;
+        map = L.map('mapa-chofer').setView([BASE.lat, BASE.lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        markerChofer = L.marker([BASE.lat, BASE.lng]).addTo(map).bindPopup("Chofer RapidPack");
+    }
+
+    function toggleMapa() {
+        const m = document.getElementById('mapa-chofer');
+        const visible = m.style.display === 'block';
+        m.style.display = visible ? 'none' : 'block';
+        if (!visible) { initMap(); setTimeout(() => map.invalidateSize(), 100); }
+    }
+
+    // --- ESCUCHAR CHOFER REALTIME ---
+    db.channel('gps').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, p => {
+        const cLoc = { lat: p.new.lat, lng: p.new.lng };
+        if (markerChofer) {
+            markerChofer.setLatLng([cLoc.lat, cLoc.lng]);
+            map.panTo([cLoc.lat, cLoc.lng]);
+        }
+        verificarLlegada(cLoc);
     }).subscribe();
 
-    function verificarProximidad() {
-        if (!choferLoc) return;
+    function verificarLlegada(cLoc) {
         ruta.forEach((c, i) => {
-            const dist = Math.sqrt(Math.pow(c.lat - choferLoc.lat, 2) + Math.pow(c.lng - choferLoc.lng, 2));
+            const dist = Math.sqrt(Math.pow(c.lat - cLoc.lat, 2) + Math.pow(c.lng - cLoc.lng, 2));
             const el = document.getElementById(`item-${i}`);
-            if (dist < 0.0008) { // Aprox 80-100 metros
+            if (dist < 0.0007) { // ~70-80 metros
                 el.classList.add('llegando');
-                el.querySelector('.status-txt').innerText = "🚚 EN EL PUNTO";
+                el.querySelector('.status').innerText = "✅ EN EL PUNTO";
             } else {
                 el.classList.remove('llegando');
-                el.querySelector('.status-txt').innerText = "";
+                el.querySelector('.status').innerText = "";
             }
         });
     }
 
-    // --- SESIÓN ---
+    // --- LOGIN ---
     async function login() {
         const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('pass').value });
-        if (error) document.getElementById('error').innerText = "Acceso Denegado";
+        if (error) alert("Error");
     }
     async function logout() { await db.auth.signOut(); location.reload(); }
     db.auth.onAuthStateChange((ev, ses) => {
@@ -160,76 +158,49 @@
         document.getElementById('main-dashboard').style.display = ses ? 'flex' : 'none';
     });
 
-    // --- BUSCADOR ---
+    // --- BUSCADOR Y AGENDA ---
     async function buscar() {
         const t = document.getElementById('bus').value;
         if(t.length < 2) return;
         const { data } = await db.from('clientes').select('*').or(`nombre.ilike.%${t}%,codigo_rp.ilike.%${t}%`).limit(5);
         renderResultados(data, 'res');
     }
-    function renderResultados(data, targetId) {
-        const r = document.getElementById(targetId); r.innerHTML = "";
+
+    function renderResultados(data, target) {
+        const r = document.getElementById(target); r.innerHTML = "";
         data.forEach(c => {
             const hasC = (c.lat && c.lng); const hasT = (c.lat_2 && c.lng_2);
-            r.innerHTML += `
-                <div class="item-res">
-                    <div style="float:right;">
-                        <button class="btn-edit" onclick='prepararEdicion(${JSON.stringify(c)})'>✏️</button>
-                        <button class="btn-del" onclick='eliminar("${c.id}")'>🗑️</button>
-                    </div>
-                    <b>[${c.codigo_rp || 'S/ID'}] ${c.nombre}</b>
-                    <div style="margin-top:10px;">
-                        <button class="btn-loc ${hasC ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button>
-                        <button class="btn-loc ${hasT ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trab</button>
-                        <button class="btn-loc" style="background:var(--accent); color:white;" onclick='addTemp(${JSON.stringify(c)})'>📍 Temp</button>
-                    </div>
-                </div>`;
+            r.innerHTML += `<div style="background:white; padding:10px; border-radius:10px; margin-bottom:5px; border:1px solid #ddd;"><button style="float:right; font-size:10px;" onclick='prepararEdicion(${JSON.stringify(c)})'>✏️</button><b>${c.nombre}</b><br><button class="btn-loc ${hasC ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button><button class="btn-loc ${hasT ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trab</button></div>`;
         });
     }
 
-    // --- AGENDA COMPLETA ---
     async function verAgenda() {
         document.getElementById('modal-agenda').style.display = 'flex';
         const { data } = await db.from('clientes').select('*').order('nombre', { ascending: true });
         renderResultados(data, 'lista-completa');
     }
     function cerrarAgenda() { document.getElementById('modal-agenda').style.display = 'none'; }
-    async function eliminar(id) { if(confirm("¿Borrar cliente?")) { await db.from('clientes').delete().eq('id', id); verAgenda(); } }
 
     // --- LOGICA RUTA ---
     function add(c, tipo) {
         const lat = (tipo === "Casa") ? c.lat : c.lat_2;
         const lng = (tipo === "Casa") ? c.lng : c.lng_2;
-        if(!lat) return alert("Ubicación vacía.");
         ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat, lng, tipo });
         actualizar();
-    }
-    function addTemp(c) {
-        const lt = prompt("Latitud:"); const lg = prompt("Longitud:");
-        if(lt && lg) { ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat: parseFloat(lt), lng: parseFloat(lg), tipo: "Temp" }); actualizar(); }
     }
 
     function actualizar() {
         const l = document.getElementById('lista'); const repo = document.getElementById('repo');
         l.innerHTML = ""; document.getElementById('count').innerText = ruta.length;
-        
         const hoy = new Date();
         const f = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
         const s = hoy.getHours() < 12 ? "Buenos días" : (hoy.getHours() < 18 ? "Buenas tardes" : "Buenas noches");
-        
         let txt = `*${s}, esta es la ruta para hoy ${f}:* \n----------------------------\n`;
         ruta.forEach((c, i) => {
-            l.innerHTML += `
-                <div class="item-ruta" id="item-${i}">
-                    <span>${i+1}. ${c.nombre} <small style="color:#888">(${c.tipo})</small></span>
-                    <span class="status-txt" style="color:var(--success); font-size:11px;"></span>
-                    <button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; background:none; cursor:pointer;">❌</button>
-                </div>`;
+            l.innerHTML += `<div class="item-ruta" id="item-${i}"><span>${i+1}. ${c.nombre} <small>(${c.tipo})</small></span><span class="status" style="color:green; font-size:10px;"></span><button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; background:none;">X</button></div>`;
             txt += `${i+1}. ${c.nombre}\n`;
         });
-        if(ruta.length > 0) l.innerHTML += `<div class="item-ruta item-base">🏁 Cierre de circuito hacia Base RapidPack</div>`;
         repo.value = ruta.length > 0 ? txt : "";
-        verificarProximidad();
     }
 
     function optimizar() {
@@ -253,31 +224,24 @@
         document.getElementById('n-lat1').value = c.lat || ""; document.getElementById('n-lng1').value = c.lng || "";
         document.getElementById('n-lat2').value = c.lat_2 || ""; document.getElementById('n-lng2').value = c.lng_2 || "";
         document.getElementById('form-title').innerText = "✏️ Editando Cliente";
-        const btn = document.getElementById('btn-save'); btn.innerText = "ACTUALIZAR DATOS"; btn.className = "btn btn-update"
+        const btn = document.getElementById('btn-save'); btn.innerText = "ACTUALIZAR"; btn.style.background = "var(--accent)";
         document.getElementById('btn-cancel').style.display = "block";
     }
+
     function cancelarEdicion() {
         document.getElementById('edit-id').value = ""; document.getElementById('n-id').value = ""; document.getElementById('n-nom').value = "";
-        document.getElementById('n-lat1').value = ""; document.getElementById('n-lng1').value = "";
-        document.getElementById('n-lat2').value = ""; document.getElementById('n-lng2').value = "";
-        document.getElementById('form-title').innerText = "🆕 Nuevo Registro";
-        const btn = document.getElementById('btn-save'); btn.innerText = "GUARDAR EN AGENDA"; btn.className = "btn btn-add"
+        document.getElementById('n-lat1').value = ""; document.getElementById('n-lng1').value = ""; document.getElementById('form-title').innerText = "🆕 Registro";
+        const btn = document.getElementById('btn-save'); btn.innerText = "GUARDAR"; btn.style.background = "var(--primary)";
         document.getElementById('btn-cancel').style.display = "none";
     }
+
     async function guardar() {
         const id = document.getElementById('edit-id').value; const n = document.getElementById('n-nom').value;
-        if(!n) return alert("Nombre Requerido");
         const d = { nombre: n, codigo_rp: document.getElementById('n-id').value || null, lat: parseFloat(document.getElementById('n-lat1').value) || null, lng: parseFloat(document.getElementById('n-lng1').value) || null, lat_2: parseFloat(document.getElementById('n-lat2').value) || null, lng_2: parseFloat(document.getElementById('n-lng2').value) || null };
-        const res = id ? await db.from('clientes').update(d).eq('id', id) : await db.from('clientes').insert([d]);
-        if(res.error) alert("Error"); else location.reload();
+        if(id) await db.from('clientes').update(d).eq('id', id); else await db.from('clientes').insert([d]);
+        location.reload();
     }
-
-    // --- EXTRAS ---
-    function copiar() { document.getElementById('repo').select(); document.execCommand('copy'); alert("Reporte Copiado"); }
-    function abrirRastreo() { 
-        let l = localStorage.getItem('chofer_link') || prompt("Pega el link de Google Maps compartido:");
-        if(l) { localStorage.setItem('chofer_link', l); window.open(l, 'Tracker', 'width=450,height=600'); }
-    }
+    function copiar() { document.getElementById('repo').select(); document.execCommand('copy'); alert("Copiado"); }
 </script>
 </body>
 </html>
