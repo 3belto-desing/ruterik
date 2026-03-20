@@ -10,82 +10,75 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #111; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #111; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
         
-        /* Mapa a pantalla completa */
-        #map { width: 100vw; height: 100vh; z-index: 1; }
-
-        /* Panel de Control Flotante */
-        .info-panel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(20, 20, 22, 0.9);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            border-left: 6px solid #ff3d00; /* Rojo RapidPack */
-            width: 280px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
+        .panel { 
+            position: absolute; top: 20px; left: 20px; z-index: 1000; 
+            background: rgba(0,0,0,0.85); color: white; padding: 20px; 
+            border-radius: 12px; border-left: 5px solid #ff3d00; width: 250px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            background: #333;
-            margin-top: 10px;
-        }
-
-        .online { background: #00c853; color: black; box-shadow: 0 0 15px #00c853; }
-        
-        h2 { margin: 0; font-size: 20px; color: #ff3d00; letter-spacing: 1px; }
-        p { margin: 5px 0; font-size: 14px; color: #ccc; }
+        .tag { display: inline-block; padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; background: #444; margin-top: 10px; }
+        .online { background: #00c853; color: black; }
     </style>
 </head>
 <body>
 
-    <div class="info-panel">
-        <h2>RAPIDPACK SDE</h2>
-        <p>Monitor de Flota en Vivo</p>
-        <div id="status-tag" class="status-badge">🛰️ BUSCANDO SEÑAL...</div>
-        <div id="reloj" style="font-size: 11px; margin-top: 10px; color: #888;"></div>
+    <div class="panel">
+        <h2 style="margin:0; color:#ff3d00;">RAPIDPACK SDE</h2>
+        <p style="margin:5px 0; font-size:13px; color:#ccc;">Monitor de Flota en Vivo</p>
+        <div id="status-tag" class="tag">🛰️ BUSCANDO SEÑAL...</div>
     </div>
 
     <div id="map"></div>
 
 <script>
-    // Configuración de Supabase
+    // 1. Conexión a la Base de Datos
     const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
-    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    const db = supabase.createClient(SB_URL, SB_KEY); // Usaremos 'db' para todo
 
-    // 1. Inicializar Mapa (Vista inicial en SDE)
+    // 2. Crear el Mapa (Centrado en SDE)
     var map = L.map('map', { zoomControl: false }).setView([18.4877, -69.8561], 15);
 
-    // Capa de mapa oscuro (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; RapidPack SDE'
-    }).addTo(map);
+    // Poner el diseño del mapa (Oscuro Pro)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // 2. Definir el Camioncito Rojo
-    var redTruckIcon = L.icon({
+    // 3. Crear el Camioncito Rojo
+    var iconoRojo = L.icon({
         iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048329.png',
-        iconSize: [50, 50],
-        iconAnchor: [25, 25],
-        popupAnchor: [0, -20]
+        iconSize: [45, 45],
+        iconAnchor: [22, 22]
     });
 
-    // Crear el marcador del chofer (oculto hasta recibir señal)
-    var truckMarker = L.marker([0, 0], { icon: redTruckIcon }).addTo(map);
-    truckMarker.bindPopup("<b>Unidad RapidPack 01</b><br>Chofer en ruta").openPopup();
+    var camion = L.marker([18.4877, -69.8561], { icon: iconoRojo }).addTo(map);
 
-    // 3. Función para mover el camión con suavidad
-    function actualizarPosicion(lat, lng) {
+    // 4. Función para mover el camión
+    function mover(lat, lng) {
         if (!lat || !lng) return;
+        camion.setLatLng([lat, lng]);
+        map.panTo([lat, lng]); // La cámara sigue al chofer
+        
+        document.getElementById('status-tag').innerText = "🟢 CHOFER EN VIVO";
+        document.getElementById('status-tag').classList.add('online');
+    }
 
-        const nuevaPos =
+    // 5. Iniciar Rastreo
+    async function iniciar() {
+        // Cargar última posición
+        const { data } = await db.from('rastreo_chofer').select('*').eq('id', 'chofer1').single();
+        if (data) mover(data.lat, data.lng);
+
+        // Escuchar cambios en tiempo real
+        db.channel('gps')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, (payload) => {
+                mover(payload.new.lat, payload.new.lng);
+            })
+            .subscribe();
+    }
+
+    iniciar();
+</script>
+</body>
+</html>
