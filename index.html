@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Admin RapidPack - Buscador de Clientes</title>
+    <title>RapidPack Admin - Control Maestro 🚚</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --rp-red: #ff3d00; --rp-black: #0b0b0b; --rp-grey: #1a1a1b; --rp-green: #00c853; }
@@ -10,29 +10,36 @@
         
         header { padding: 15px 30px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rp-red); }
         
-        main { padding: 20px; max-width: 800px; margin: auto; }
-        .card { background: var(--rp-grey); border-radius: 12px; padding: 20px; border: 1px solid #333; margin-bottom: 20px; }
+        main { padding: 20px; max-width: 900px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: var(--rp-grey); border-radius: 12px; padding: 20px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .full-width { grid-column: 1 / -1; }
 
         /* BUSCADOR */
         .search-box { width: 100%; padding: 15px; background: #222; border: 2px solid #444; color: white; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
         .search-box:focus { border-color: var(--rp-red); outline: none; }
         
-        /* RESULTADO DEL CLIENTE */
-        #cliente-seleccionado { display: none; margin-top: 20px; animation: fadeIn 0.3s; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-ubi { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 12px; }
+        #cliente-seleccionado { display: none; margin-top: 20px; padding: 15px; background: #222; border-radius: 10px; border: 1px dashed #444; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .btn-ubi { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 10px; text-transform: uppercase; }
         .btn-casa { background: #3498db; }
         .btn-trabajo { background: #9b59b6; }
         .btn-temp { background: #f39c12; }
-        .btn-ubi:disabled { background: #444; cursor: not-allowed; opacity: 0.5; }
+        .btn-ubi:disabled { background: #444; cursor: not-allowed; opacity: 0.3; }
 
-        /* BORRADOR DE RUTA */
-        .item-draft { background: #252526; padding: 12px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); }
+        /* WHATSAPP */
+        .btn-wa { width: 100%; background: #25d366; color: black; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+        /* FORMULARIO REGISTRO */
+        .form-section { margin-bottom: 15px; padding: 10px; background: #222; border-radius: 8px; border-left: 3px solid #444; }
+        .form-section.active { border-left-color: var(--rp-red); }
+        label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; }
+        .f-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        input { background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 6px; flex: 1; font-size: 13px; }
+        input:focus { border-color: var(--rp-red); outline: none; }
+
+        /* BORRADOR */
+        .item-draft { background: #252526; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); font-size: 13px; }
         .btn-del { background: none; border: none; color: #ff5555; cursor: pointer; font-weight: bold; }
-
-        /* FORMULARIO NUEVO CLIENTE */
-        .f-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        input[type="text"], input[type="number"] { background: #222; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; flex: 1; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -40,41 +47,73 @@
 <body>
 
 <header>
-    <h2 style="color: var(--rp-red); margin:0;">RAPIDPACK ADMIN</h2>
-    <button style="background:var(--rp-grey); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;" onclick="location.href='despacho.html'">🖥️ Ir al Radar</button>
+    <h2 style="color: var(--rp-red); margin:0; font-size: 22px;">RAPIDPACK ADMIN</h2>
+    <button style="background:var(--rp-grey); color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="location.href='despacho.html'">🖥️ IR AL MONITOR</button>
 </header>
 
 <main>
     <div class="card">
-        <h3>🔍 Buscar Cliente (Nombre o RP)</h3>
-        <input type="text" id="buscador" class="search-box" placeholder="Escribe para buscar..." oninput="buscar()">
+        <h3 style="margin:0 0 15px 0; color:var(--rp-red);">🔍 Buscador Rápido</h3>
+        <input type="text" id="buscador" class="search-box" placeholder="Nombre del cliente..." oninput="buscar()">
         
         <div id="cliente-seleccionado">
-            <h2 id="view-nombre" style="margin-bottom:5px; color:var(--rp-red);"></h2>
-            <p style="margin:0; font-size:12px; color:#aaa;">Selecciona el destino para la ruta:</p>
+            <h2 id="view-nombre" style="margin:0; font-size:18px;"></h2>
+            <p id="view-telefono" style="margin:5px 0; color:#888; font-size:12px;"></p>
+            
+            <p style="margin:15px 0 5px 0; font-size:11px; color:#aaa;">1. AVISAR POR WHATSAPP:</p>
+            <div class="btn-group">
+                <button id="wa-casa" class="btn-wa" onclick="enviarWA('casa')">WA CASA</button>
+                <button id="wa-trabajo" class="btn-wa" onclick="enviarWA('trabajo')">WA TRABAJO</button>
+                <button id="wa-temp" class="btn-wa" onclick="enviarWA('temporal')">WA TEMP</button>
+            </div>
+
+            <p style="margin:15px 0 5px 0; font-size:11px; color:#aaa;">2. AGREGAR A RUTA:</p>
             <div class="btn-group">
                 <button id="btn-casa" class="btn-ubi btn-casa" onclick="addParada('casa')">🏠 CASA</button>
                 <button id="btn-trabajo" class="btn-ubi btn-trabajo" onclick="addParada('trabajo')">💼 TRABAJO</button>
-                <button id="btn-temp" class="btn-ubi btn-temp" onclick="addParada('temporal')">⏳ TEMPORAL</button>
+                <button id="btn-temp" class="btn-ubi btn-temp" onclick="addParada('temporal')">⏳ TEMP</button>
             </div>
         </div>
-    </div>
 
-    <div class="card" id="card-borrador" style="display:none;">
-        <h3>📄 Ruta para enviar</h3>
-        <div id="lista-borrador"></div>
-        <button style="width:100%; background:var(--rp-green); border:none; color:black; padding:15px; font-weight:bold; border-radius:8px; margin-top:15px; cursor:pointer;" onclick="lanzarRuta()">🚀 LANZAR A FLOTA AHORA</button>
+        <div id="card-borrador" style="display:none; margin-top:20px; border-top:1px solid #333; padding-top:20px;">
+            <h3 style="margin:0 0 10px 0;">📄 Ruta Lista</h3>
+            <div id="lista-borrador"></div>
+            <button style="width:100%; background:var(--rp-green); border:none; padding:15px; font-weight:bold; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="lanzarRuta()">🚀 LANZAR AHORA</button>
+        </div>
     </div>
 
     <div class="card">
-        <h4 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">➕ Registrar Nuevo Cliente</h4>
-        <div class="f-row"><input type="text" id="n-nombre" placeholder="Nombre completo"></div>
-        <p style="font-size:11px; color:var(--rp-red); margin:5px 0;">Coordenadas Casa (Lat, Lng):</p>
+        <h3 style="margin:0 0 15px 0; color:#aaa;">➕ Registro de Cliente</h3>
         <div class="f-row">
-            <input type="number" step="any" id="n-lat-c" placeholder="Latitud">
-            <input type="number" step="any" id="n-lng-c" placeholder="Longitud">
+            <div style="flex:2"><label>Nombre</label><input type="text" id="n-nombre" placeholder="Ej: Juan Perez"></div>
+            <div style="flex:1"><label>WhatsApp</label><input type="tel" id="n-telefono" placeholder="8091234567"></div>
         </div>
-        <button onclick="guardarNuevo()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">GUARDAR EN BASE DE DATOS</button>
+
+        <div class="form-section active">
+            <label>🏠 UBICACIÓN CASA</label>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat-casa" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng-casa" placeholder="Longitud">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <label>💼 UBICACIÓN TRABAJO</label>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat-trabajo" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng-trabajo" placeholder="Longitud">
+            </div>
+        </div>
+
+        <div class="form-section" style="border-left-color: #f39c12;">
+            <label>⏳ UBICACIÓN TEMPORAL (Solo para hoy)</label>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat-temporal" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng-temporal" placeholder="Longitud">
+            </div>
+        </div>
+
+        <button onclick="guardarNuevo()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer;">💾 GUARDAR CLIENTE EN SISTEMA</button>
     </div>
 </main>
 
@@ -85,7 +124,6 @@
     let borrador = [];
     let clienteActivo = null;
 
-    // Cargar datos iniciales
     async function init() {
         const { data } = await db.from('clientes').select('*');
         clientesRaw = data || [];
@@ -94,89 +132,69 @@
     function buscar() {
         const txt = document.getElementById('buscador').value.toLowerCase();
         const display = document.getElementById('cliente-seleccionado');
-        
         if (txt.length < 2) { display.style.display = 'none'; return; }
-
         clienteActivo = clientesRaw.find(c => c.nombre.toLowerCase().includes(txt));
-
         if (clienteActivo) {
             display.style.display = 'block';
             document.getElementById('view-nombre').innerText = clienteActivo.nombre;
-            
-            // Habilitar botones solo si tienen coordenadas
-            document.getElementById('btn-casa').disabled = !clienteActivo.lat_casa;
-            document.getElementById('btn-trabajo').disabled = !clienteActivo.lat_trabajo;
-            document.getElementById('btn-temp').disabled = !clienteActivo.lat_temporal;
-        } else {
-            display.style.display = 'none';
-        }
+            document.getElementById('view-telefono').innerText = "📞 " + (clienteActivo.telefono || "Sin teléfono");
+            ['casa', 'trabajo', 'temporal'].forEach(id => {
+                const tiene = !!clienteActivo[`lat_${id}`];
+                document.getElementById(`btn-${id === 'temporal' ? 'temp' : id}`).disabled = !tiene;
+                document.getElementById(`wa-${id === 'temporal' ? 'temp' : id}`).style.display = tiene ? 'flex' : 'none';
+            });
+        } else { display.style.display = 'none'; }
+    }
+
+    function enviarWA(tipo) {
+        if (!clienteActivo.telefono) return alert("Falta teléfono");
+        const msg = `Hola *${clienteActivo.nombre}*, de RapidPack. Tu pedido va en camino a tu ubicación de *${tipo.toUpperCase()}*. 🚚`;
+        window.open(`https://wa.me/${clienteActivo.telefono}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     function addParada(tipo) {
-        if (!clienteActivo) return;
-        const lat = clienteActivo[`lat_${tipo}`];
-        const lng = clienteActivo[`lng_${tipo}`];
-
-        borrador.push({ nombre: `${clienteActivo.nombre} (${tipo.toUpperCase()})`, lat, lng });
-        
+        const t = tipo === 'temp' ? 'temporal' : tipo;
+        borrador.push({ nombre: `${clienteActivo.nombre} (${t.toUpperCase()})`, lat: clienteActivo[`lat_${t}`], lng: clienteActivo[`lng_${t}`] });
         document.getElementById('buscador').value = '';
         document.getElementById('cliente-seleccionado').style.display = 'none';
         actualizarBorradorUI();
     }
 
     function actualizarBorradorUI() {
-        const card = document.getElementById('card-borrador');
-        const lista = document.getElementById('lista-borrador');
-        
-        card.style.display = borrador.length > 0 ? 'block' : 'none';
-        lista.innerHTML = borrador.map((item, i) => `
+        document.getElementById('card-borrador').style.display = borrador.length > 0 ? 'block' : 'none';
+        document.getElementById('lista-borrador').innerHTML = borrador.map((item, i) => `
             <div class="item-draft">
                 <span><b>${i+1}.</b> ${item.nombre}</span>
-                <button class="btn-del" onclick="borrador.splice(${i},1); actualizarBorradorUI()">X</button>
+                <button class="btn-del" onclick="borrador.splice(${i},1); actualizarBorradorUI()">✕</button>
             </div>
         `).join('');
     }
 
     async function lanzarRuta() {
-        if (!confirm("¿Enviar esta ruta al monitor de despacho?")) return;
-        
-        // Limpiar ruta activa vieja
+        if (!confirm("¿Lanzar ruta?")) return;
         await db.from('ruta_activa').delete().neq('id', -1);
-
-        const paradas = borrador.map((p, i) => ({
-            id: i, nombre: p.nombre, lat: p.lat, lng: p.lng, orden: i+1, estado: 'Pendiente'
-        }));
-
+        const paradas = borrador.map((p, i) => ({ id: i, nombre: p.nombre, lat: p.lat, lng: p.lng, orden: i+1, estado: 'Pendiente' }));
         await db.from('ruta_activa').insert(paradas);
-        alert("¡Ruta lanzada a la flota!");
         location.href = 'despacho.html';
     }
 
     async function guardarNuevo() {
         const nombre = document.getElementById('n-nombre').value;
-        const lat_casa = document.getElementById('n-lat-c').value;
-        const lng_casa = document.getElementById('n-lng-c').value;
+        const telefono = document.getElementById('n-telefono').value;
+        const lat_casa = document.getElementById('n-lat-casa').value || null;
+        const lng_casa = document.getElementById('n-lng-casa').value || null;
+        const lat_trabajo = document.getElementById('n-lat-trabajo').value || null;
+        const lng_trabajo = document.getElementById('n-lng-trabajo').value || null;
+        const lat_temporal = document.getElementById('n-lat-temporal').value || null;
+        const lng_temporal = document.getElementById('n-lng-temporal').value || null;
 
-        if (!nombre || !lat_casa) return alert("Nombre y coordenadas son obligatorios");
+        if (!nombre) return alert("El nombre es obligatorio");
 
-        const { error } = await db.from('clientes').insert([{ nombre, lat_casa, lng_casa }]);
-        
-        if (error) {
-            alert("Error al guardar: " + error.message);
-        } else {
-            alert("Cliente guardado con éxito");
-            location.reload(); // Recargar para que aparezca en el buscador
-        }
+        const { error } = await db.from('clientes').insert([{ nombre, telefono, lat_casa, lng_casa, lat_trabajo, lng_trabajo, lat_temporal, lng_temporal }]);
+        if (error) alert("Error"); else { alert("Guardado"); location.reload(); }
     }
 
-    // Cerrar buscador con ESC
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.getElementById('buscador').value = '';
-            document.getElementById('cliente-seleccionado').style.display = 'none';
-        }
-    });
-
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('buscador').value = ''; document.getElementById('cliente-seleccionado').style.display = 'none'; } });
     init();
 </script>
 </body>
