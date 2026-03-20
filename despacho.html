@@ -2,135 +2,124 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RapidPack Control Pro 🛰️</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #111; display: flex; }
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; display: flex; }
         
-        /* Panel Lateral de Flota */
+        /* Panel Izquierdo */
         #sidebar { 
-            width: 320px; background: #1a1a1b; color: white; border-right: 2px solid #333; 
-            display: flex; flex-direction: column; z-index: 1001; 
+            width: 300px; height: 100%; background: #111; color: white; 
+            border-right: 2px solid #333; display: flex; flex-direction: column; z-index: 2000;
         }
-        .header-sidebar { padding: 20px; background: #000; border-bottom: 3px solid #ff3d00; }
-        .route-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .header { padding: 20px; background: #000; border-bottom: 3px solid #ff3d00; }
+        .route-list { flex: 1; overflow-y: auto; padding: 15px; }
 
-        /* Estilo de los Items de la Ruta */
-        .client-item { 
-            background: #242526; margin-bottom: 10px; padding: 12px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-left: 4px solid #555; transition: 0.3s;
+        /* Contenedor del Mapa (ESTO ES LO QUE FALLABA) */
+        #map-container { flex: 1; position: relative; height: 100%; background: #222; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+
+        /* Estilo de los Clientes */
+        .client-card { 
+            background: #222; margin-bottom: 12px; padding: 15px; border-radius: 10px;
+            border-left: 5px solid #555; display: flex; justify-content: space-between; align-items: center;
         }
-        .client-item.active { border-left-color: #ff9800; background: #2c2d2e; }
-        .client-item.completed { border-left-color: #00c853; opacity: 0.7; }
-        
-        .check-box { width: 20px; height: 20px; border: 2px solid #555; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
-        .completed .check-box { background: #00c853; border-color: #00c853; }
-        .completed .check-box::after { content: '✓'; color: black; font-weight: bold; }
-
-        #map { flex: 1; position: relative; }
-        
-        .dist-tag { font-size: 10px; color: #aaa; display: block; }
+        .completed { border-left-color: #00c853 !important; opacity: 0.6; }
+        .check { width: 20px; height: 20px; border: 2px solid #555; border-radius: 50%; }
+        .completed .check { background: #00c853; border-color: #00c853; }
+        .dist { font-size: 11px; color: #ff9800; display: block; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <div class="header-sidebar">
-            <h2 style="margin:0; color:#ff3d00; font-size: 18px;">RAPIDPACK SDE</h2>
-            <div id="status-global" style="font-size: 12px; color: #888; margin-top:5px;">📡 Conectando...</div>
+        <div class="header">
+            <h2 style="margin:0; color:#ff3d00;">RAPIDPACK</h2>
+            <div id="status" style="font-size: 12px; color: #00c853; margin-top:5px;">● SISTEMA ACTIVO</div>
         </div>
-        <div class="route-list" id="lista-clientes">
+        <div class="route-list" id="lista">
             </div>
     </div>
 
-    <div id="map"></div>
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
 
 <script>
+    // 1. Configuración
     const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
 
+    // 2. Inicializar Mapa con retraso para asegurar que el DIV exista
     var map = L.map('map', { zoomControl: false }).setView([18.4877, -69.8561], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
     var iconoCamion = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048329.png', iconSize: [40, 40] });
-    var truckMarker = L.marker([0, 0], { icon: iconoCamion }).addTo(map);
+    var markerChofer = L.marker([0, 0], { icon: iconoCamion }).addTo(map);
 
-    let clientesRuta = [];
-    let markersClientes = {};
+    let clientes = [];
 
-    // --- MOTOR DE DISTANCIA (Haversine) ---
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Radio de la Tierra en metros
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c; // Resultado en metros
-    }
-
-    async function cargarRuta() {
+    // 3. Funciones de Lógica
+    async function cargarDatos() {
         const { data } = await db.from('ruta_activa').select('*').order('orden', { ascending: true });
-        clientesRuta = data || [];
-        renderizarLista();
-        dibujarMapa();
-    }
-
-    function renderizarLista() {
-        const lista = document.getElementById('lista-clientes');
-        lista.innerHTML = '';
-        clientesRuta.forEach(c => {
-            const div = document.createElement('div');
-            div.className = `client-item ${c.estado === 'Entregado' ? 'completed' : ''}`;
-            div.id = `item-${c.id}`;
-            div.innerHTML = `
-                <div>
-                    <span style="font-weight:bold; font-size:14px;">${c.orden}. ${c.nombre}</span>
-                    <span class="dist-tag" id="dist-${c.id}">Calculando...</span>
+        clientes = data || [];
+        
+        const listaDiv = document.getElementById('lista');
+        listaDiv.innerHTML = '';
+        
+        clientes.forEach(c => {
+            const isDone = c.estado === 'Entregado';
+            listaDiv.innerHTML += `
+                <div class="client-card ${isDone ? 'completed' : ''}">
+                    <div>
+                        <b style="font-size:14px;">${c.orden}. ${c.nombre}</b>
+                        <span class="dist" id="d-${c.id}">${isDone ? 'Entregado' : 'Calculando...'}</span>
+                    </div>
+                    <div class="check"></div>
                 </div>
-                <div class="check-box"></div>
             `;
-            lista.appendChild(div);
+            // Dibujar punto en mapa
+            L.circleMarker([c.lat, c.lng], { color: isDone ? '#00c853' : '#ff9800', radius: 6 }).addTo(map);
         });
     }
 
-    function dibujarMapa() {
-        Object.values(markersClientes).forEach(m => map.removeLayer(m));
-        clientesRuta.forEach(c => {
-            const color = c.estado === 'Entregado' ? '#00c853' : '#ff9800';
-            markersClientes[c.id] = L.circleMarker([c.lat, c.lng], { color: color, radius: 7, fillOpacity: 0.8 }).addTo(map);
-        });
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371000; 
+        const dLat = (lat2-lat1) * Math.PI/180;
+        const dLon = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    async function procesarGps(lat, lng) {
-        truckMarker.setLatLng([lat, lng]);
-        document.getElementById('status-global').innerHTML = "🟢 <b style='color:#00c853'>CHOFER EN MOVIMIENTO</b>";
+    async function actualizarGps(lat, lng) {
+        markerChofer.setLatLng([lat, lng]);
+        map.panTo([lat, lng]);
 
-        for (let c of clientesRuta) {
-            if (c.estado === 'Entregado') continue;
+        for (let c of clientes) {
+            if (c.estado !== 'Entregado') {
+                const metros = calcularDistancia(lat, lng, c.lat, c.lng);
+                const el = document.getElementById(`d-${c.id}`);
+                if (el) el.innerText = `A ${metros.toFixed(0)} metros`;
 
-            const distancia = calcularDistancia(lat, lng, c.lat, c.lng);
-            const distElement = document.getElementById(`dist-${c.id}`);
-            if(distElement) distElement.innerText = `A ${distancia.toFixed(1)} metros`;
-
-            // SI ESTÁ A MENOS DE 5 METROS -> AUTO CHECK
-            if (distancia <= 5) {
-                await db.from('ruta_activa').update({ estado: 'Entregado' }).eq('id', c.id);
-                // La suscripción realtime refrescará la lista automáticamente
+                // AUTO-CHECK A 15 METROS (Más seguro que 5m)
+                if (metros <= 15) {
+                    await db.from('ruta_activa').update({ estado: 'Entregado' }).eq('id', c.id);
+                }
             }
         }
     }
 
-    // Escuchar cambios
-    db.channel('logistica')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, p => procesarGps(p.new.lat, p.new.lng))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'ruta_activa' }, () => cargarRuta())
+    // 4. Suscribirse
+    db.channel('flota')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, p => actualizarGps(p.new.lat, p.new.lng))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'ruta_activa' }, () => cargarDatos())
     .subscribe();
 
-    cargarRuta();
+    cargarDatos();
 </script>
 </body>
 </html>
