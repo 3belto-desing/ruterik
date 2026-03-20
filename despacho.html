@@ -1,97 +1,47 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Ruterik Live Radar 🛰️</title>
+    <title>RapidPack Live Radar 🛰️</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a1b; color: white; margin: 0; display: flex; height: 100vh; }
-        #sidebar { width: 350px; background: #242526; padding: 20px; overflow-y: auto; border-right: 2px solid #00c853; }
-        #map { flex: 1; background: #ddd; }
-        .cliente-card { background: #333; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #444; }
-        .entregado { border-left-color: #00c853; opacity: 0.6; }
-        .gps-badge { background: #00c853; color: black; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; }
+        body { margin: 0; display: flex; height: 100vh; background: #1a1a1b; color: white; font-family: sans-serif; }
+        #sidebar { width: 300px; padding: 20px; background: #242526; border-right: 2px solid #00c853; }
+        #map { flex: 1; }
+        .gps-on { color: #00c853; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div id="sidebar">
-        <h2>RapidPack Control 🚚</h2>
-        <div id="status-gps" class="gps-badge">🛰️ BUSCANDO CHOFER...</div>
+        <h2>Radar SDE 🚚</h2>
+        <p id="status">📡 Buscando señal...</p>
         <hr>
         <div id="lista-clientes"></div>
     </div>
-
     <div id="map"></div>
 
 <script>
-    const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
-    const db = supabase.createClient(SB_URL, SB_KEY);
+    const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
 
-    // --- CONFIG MAPA ---
-    let map = L.map('map').setView([18.48774, -69.85612], 13); // Centrado en SDE
+    // 1. Inicializar Mapa
+    var map = L.map('map').setView([18.4877, -69.8561], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    
-    let markerChofer = L.marker([0,0], {icon: L.icon({
-        iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854878.png', // Icono camión
-        iconSize: [40, 40]
-    })}).addTo(map);
 
-    let markersClientes = {};
+    // 2. Icono del Camioncito
+    var iconoCamion = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854878.png', 
+        iconSize: [45, 45]
+    });
+    var markerChofer = L.marker([18.4877, -69.8561], {icon: iconoCamion}).addTo(map);
 
-    // --- CARGAR DATOS ---
-    async function init() {
-        const { data: clientes } = await db.from('ruta_activa').select('*').order('orden');
-        renderLista(clientes);
-        renderMapaClientes(clientes);
-        
-        // Obtener última posición conocida del chofer al abrir
-        const { data: gps } = await db.from('rastreo_chofer').select('*').eq('id', 'chofer1').single();
-        if(gps) moverChofer(gps.lat, gps.lng);
-    }
-
-    function renderLista(data) {
-        const div = document.getElementById('lista-clientes');
-        div.innerHTML = data.map(c => `
-            <div class="cliente-card ${c.estado === 'Entregado' ? 'entregado' : ''}">
-                <b>${c.orden}. ${c.nombre}</b><br>
-                <small>${c.estado === 'Entregado' ? '✅ Entregado' : '🚚 En camino'}</small>
-            </div>
-        `).join('');
-    }
-
-    function renderMapaClientes(data) {
-        data.forEach(c => {
-            if(!markersClientes[c.id]) {
-                markersClientes[c.id] = L.circleMarker([c.lat, c.lng], {
-                    color: c.estado === 'Entregado' ? '#00c853' : '#ff9800',
-                    radius: 8
-                }).addTo(map).bindPopup(c.nombre);
-            }
-        });
-    }
-
-    function moverChofer(lat, lng) {
-        markerChofer.setLatLng([lat, lng]);
-        document.getElementById('status-gps').innerText = "🛰️ CHOFER EN VIVO";
-        document.getElementById('status-gps').style.background = "#00c853";
-    }
-
-    // --- ESCUCHAR CAMBIOS (REALTIME) ---
-    // 1. Si el chofer se mueve
-    db.channel('gps').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, payload => {
-        moverChofer(payload.new.lat, payload.new.lng);
+    // 3. Escuchar ubicación en tiempo real
+    db.channel('rastreo').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, payload => {
+        const { lat, lng } = payload.new;
+        markerChofer.setLatLng([lat, lng]); // Mover el camión
+        map.panTo([lat, lng]); // Seguir con la cámara
+        document.getElementById('status').innerHTML = "📡 <span class='gps-on'>CHOFER EN VIVO</span>";
     }).subscribe();
-
-    // 2. Si un cliente se marca como entregado
-    db.channel('ruta').on('postgres_changes', { event: '*', schema: 'public', table: 'ruta_activa' }, payload => {
-        init(); // Recargar todo para actualizar colores
-    }).subscribe();
-
-    init();
 </script>
 </body>
 </html>
