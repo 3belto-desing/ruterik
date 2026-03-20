@@ -6,13 +6,12 @@
     <title>Ruterik Pro - Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* TEMA DINÁMICO */
         :root { --bg: #f4f7f6; --card: #ffffff; --text: #2d3436; --p: #00c853; --a: #2196f3; --border: #ddd; }
         [data-theme="dark"] { --bg: #1a1a1b; --card: #2d2d2e; --text: #f1f2f6; --border: #444; }
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
         .header { background: var(--card); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--p); }
-        .container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; }
+        .container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px; }
         .card { background: var(--card); border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border); }
         
         input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
@@ -20,8 +19,12 @@
         .btn-p { background: var(--p); color: white; }
         .btn-a { background: var(--a); color: white; }
         
+        /* Estilo para los resultados de búsqueda */
+        #resultados-busqueda { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; margin-top: -10px; margin-bottom: 15px; display: none; }
+        .res-item { padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .res-item:hover { background: var(--p); color: white; }
+
         .item-ruta { background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--p); position: relative; }
-        .nota-negrita { font-weight: bold; color: var(--a); display: block; margin-top: 5px; }
     </style>
 </head>
 <body data-theme="light">
@@ -30,33 +33,39 @@
         <h2>RUTERIK <span style="color:var(--p)">PRO</span> 🚚</h2>
         <div>
             <button onclick="toggleTheme()" class="btn" style="width:auto; padding:8px 15px;">🌓 Tema</button>
-            <button onclick="location.href='despacho.html'" class="btn btn-a" style="width:auto; padding:8px 15px;">📊 Ir a Despacho</button>
+            <button onclick="location.href='despacho.html'" class="btn btn-a" style="width:auto; padding:8px 15px;">📊 Monitor en Vivo</button>
         </div>
     </div>
 
     <div class="container">
         <div class="card">
-            <h3>📍 Nueva Parada</h3>
-            <input type="text" id="nom" placeholder="Nombre del Cliente / ID RP">
+            <h3>🔍 Buscar Cliente</h3>
+            <input type="text" id="bus" oninput="buscarEnBaseDeDatos()" placeholder="Escribe nombre o ID RP...">
+            <div id="resultados-busqueda"></div>
+
+            <hr style="border:0; border-top:1px solid var(--border); margin: 20px 0;">
+
+            <h3>📍 Confirmar Parada</h3>
+            <input type="text" id="nom" placeholder="Nombre">
             <input type="text" id="lat" placeholder="Latitud">
             <input type="text" id="lng" placeholder="Longitud">
-            <textarea id="nota" placeholder="Nota de entrega (Saldrá en negrita en WhatsApp)"></textarea>
-            <button class="btn btn-p" onclick="agregarARuta()">Agregar a la Lista</button>
+            <textarea id="nota" placeholder="Nota de entrega (ej: Entregar a Juan)"></textarea>
+            <button class="btn btn-p" onclick="agregarARuta()">➕ Añadir a la Ruta</button>
         </div>
 
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3>🗺️ Ruta del Día</h3>
-                <button class="btn btn-a" style="width:150px; background:#ff9800;" onclick="optimizarRuta()">⚡ Optimizar (Desde Trabajo)</button>
+                <button class="btn btn-a" style="width:150px; background:#ff9800;" onclick="optimizarRuta()">⚡ Optimizar</button>
             </div>
             
             <div id="lista-ruta" style="min-height: 200px; margin: 15px 0;"></div>
             
-            <button class="btn btn-p" style="font-size:18px;" onclick="lanzarRuta()">🚀 LANZAR RUTA A LA FLOTA</button>
+            <button class="btn btn-p" style="font-size:18px; height: 60px;" onclick="lanzarRuta()">🚀 LANZAR A LA FLOTA</button>
 
-            <h3 style="margin-top:20px;">📝 Reporte WhatsApp</h3>
-            <textarea id="repo" style="height: 150px; font-family: monospace;"></textarea>
-            <button class="btn btn-a" onclick="copiarRepo()">Copiar para WhatsApp</button>
+            <h3 style="margin-top:20px;">📝 Reporte WhatsApp (Negritas)</h3>
+            <textarea id="repo" style="height: 120px; font-family: monospace;"></textarea>
+            <button class="btn btn-a" onclick="copiarRepo()">Copiar Reporte</button>
         </div>
     </div>
 
@@ -66,8 +75,45 @@
     const db = supabase.createClient(SB_URL, SB_KEY);
 
     let rutaPlanificada = [];
-    const UBICACION_TRABAJO = { lat: 18.48774, lng: -69.85612 }; // RapidPack SDE
+    const UBICACION_TRABAJO = { lat: 18.48774, lng: -69.85612 }; 
 
+    // --- FUNCIÓN DE BÚSQUEDA ---
+    async function buscarEnBaseDeDatos() {
+        const query = document.getElementById('bus').value;
+        const lista = document.getElementById('resultados-busqueda');
+        
+        if (query.length < 2) { lista.style.display = 'none'; return; }
+
+        const { data, error } = await db
+            .from('clientes') // Cambia esto por el nombre exacto de tu tabla si es distinto
+            .select('*')
+            .ilike('nombre', `%${query}%`)
+            .limit(5);
+
+        if (data && data.length > 0) {
+            lista.innerHTML = "";
+            lista.style.display = 'block';
+            data.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'res-item';
+                div.innerText = c.nombre;
+                div.onclick = () => seleccionarCliente(c);
+                lista.appendChild(div);
+            });
+        } else {
+            lista.style.display = 'none';
+        }
+    }
+
+    function seleccionarCliente(c) {
+        document.getElementById('nom').value = c.nombre;
+        document.getElementById('lat').value = c.lat;
+        document.getElementById('lng').value = c.lng;
+        document.getElementById('resultados-busqueda').style.display = 'none';
+        document.getElementById('bus').value = "";
+    }
+
+    // --- LÓGICA DE RUTA ---
     function toggleTheme() {
         const b = document.body;
         const nuevo = b.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -81,10 +127,11 @@
             lng: parseFloat(document.getElementById('lng').value),
             nota: document.getElementById('nota').value
         };
-        if(!n.nombre || !n.lat) return alert("Completa los datos");
+        if(!n.nombre || isNaN(n.lat)) return alert("Faltan datos");
         rutaPlanificada.push(n);
         actualizarVista();
-        document.getElementById('nom').value = ""; document.getElementById('nota').value = "";
+        // Limpiar campos
+        ['nom','lat','lng','nota'].forEach(id => document.getElementById(id).value = "");
     }
 
     function optimizarRuta() {
@@ -118,10 +165,9 @@
             div.innerHTML += `
                 <div class="item-ruta">
                     <b>${i+1}. ${c.nombre}</b>
-                    <span class="nota-negrita">${c.nota ? 'Obs: ' + c.nota : ''}</span>
+                    <br><small style="color:var(--a)">${c.nota ? 'Obs: ' + c.nota : ''}</small>
                 </div>`;
             
-            // Negrita para WhatsApp en la nota
             const notaWasp = c.nota ? `\n   Obs: *${c.nota}*` : '';
             texto += `${i+1}. ${c.nombre}${notaWasp}\n`;
         });
@@ -129,19 +175,21 @@
     }
 
     async function lanzarRuta() {
-        if(rutaPlanificada.length === 0) return;
+        if(rutaPlanificada.length === 0) return alert("Agrega clientes primero");
+        // Limpiar despacho actual
         await db.from('ruta_activa').delete().neq('estado', 'mantenimiento');
+        // Insertar nueva ruta
         const datos = rutaPlanificada.map((c, i) => ({
             nombre: c.nombre, lat: c.lat, lng: c.lng, nota_entrega: c.nota, orden: i+1
         }));
-        await db.from('ruta_activa').insert(datos);
-        alert("🚀 Ruta enviada al Monitor y a la App del Chofer.");
+        const { error } = await db.from('ruta_activa').insert(datos);
+        if(!error) alert("🚀 ¡Ruta enviada! El monitor y el chofer ya pueden verla.");
     }
 
     function copiarRepo() {
         document.getElementById('repo').select();
         document.execCommand('copy');
-        alert("Reporte copiado");
+        alert("Copiado para enviar por WhatsApp ✅");
     }
 </script>
 </body>
