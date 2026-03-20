@@ -3,69 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro - Admin</title>
+    <title>Ruterik Pro v2 - Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #f4f7f6; --card: #ffffff; --text: #2d3436; --p: #00c853; --a: #2196f3; --border: #ddd; }
-        [data-theme="dark"] { --bg: #1a1a1b; --card: #2d2d2e; --text: #f1f2f6; --border: #444; }
+        :root { --bg: #f0f2f5; --card: #ffffff; --text: #1c1e21; --p: #00c853; --a: #1877f2; --border: #ddd; }
+        [data-theme="dark"] { --bg: #18191a; --card: #242526; --text: #e4e6eb; --border: #3e4042; }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
-        .header { background: var(--card); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--p); }
-        .container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px; }
-        .card { background: var(--card); border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
+        .header { background: var(--card); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--p); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: auto; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 1px solid var(--border); }
         
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; font-size: 14px; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; margin-bottom: 8px; font-size: 14px; }
         .btn-p { background: var(--p); color: white; }
+        .btn-p:hover { background: #00a344; }
         .btn-a { background: var(--a); color: white; }
         
-        /* Estilo para los resultados de búsqueda */
-        #resultados-busqueda { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; margin-top: -10px; margin-bottom: 15px; display: none; }
-        .res-item { padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 14px; }
+        #resultados-busqueda { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-height: 180px; overflow-y: auto; margin-top: -10px; margin-bottom: 15px; display: none; position: absolute; width: 340px; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .res-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
         .res-item:hover { background: var(--p); color: white; }
 
-        .item-ruta { background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--p); position: relative; }
+        .item-ruta { background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid var(--p); display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: var(--a); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
     </style>
 </head>
 <body data-theme="light">
 
     <div class="header">
-        <h2>RUTERIK <span style="color:var(--p)">PRO</span> 🚚</h2>
-        <div>
-            <button onclick="toggleTheme()" class="btn" style="width:auto; padding:8px 15px;">🌓 Tema</button>
-            <button onclick="location.href='despacho.html'" class="btn btn-a" style="width:auto; padding:8px 15px;">📊 Monitor en Vivo</button>
+        <h2 style="margin:0;">RUTERIK <span style="color:var(--p)">PRO</span> 🚚</h2>
+        <div style="display:flex; gap:10px;">
+            <button onclick="toggleTheme()" class="btn" style="width:auto; margin:0;">🌓 Tema</button>
+            <button onclick="window.open('despacho.html', '_blank')" class="btn btn-a" style="width:auto; margin:0;">📊 Monitor Vivo</button>
         </div>
     </div>
 
     <div class="container">
-        <div class="card">
+        <div class="card" style="position: relative;">
             <h3>🔍 Buscar Cliente</h3>
-            <input type="text" id="bus" oninput="buscarEnBaseDeDatos()" placeholder="Escribe nombre o ID RP...">
+            <input type="text" id="bus" oninput="buscarDB()" placeholder="Escribe nombre o ID...">
             <div id="resultados-busqueda"></div>
 
             <hr style="border:0; border-top:1px solid var(--border); margin: 20px 0;">
 
-            <h3>📍 Confirmar Parada</h3>
-            <input type="text" id="nom" placeholder="Nombre">
+            <h3>📍 Parada Actual</h3>
+            <input type="text" id="nom" placeholder="Nombre completo">
             <input type="text" id="lat" placeholder="Latitud">
             <input type="text" id="lng" placeholder="Longitud">
-            <textarea id="nota" placeholder="Nota de entrega (ej: Entregar a Juan)"></textarea>
-            <button class="btn btn-p" onclick="agregarARuta()">➕ Añadir a la Ruta</button>
+            <textarea id="nota" placeholder="Nota (Ej: Dejar en recepción)"></textarea>
+            <button class="btn btn-p" onclick="agregarARuta()">➕ Añadir a la Lista</button>
         </div>
 
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>🗺️ Ruta del Día</h3>
-                <button class="btn btn-a" style="width:150px; background:#ff9800;" onclick="optimizarRuta()">⚡ Optimizar</button>
+                <h3>🗺️ Plan de Ruta</h3>
+                <button class="btn btn-a" style="width:180px; background:#f39c12;" onclick="optimizar()">⚡ Optimizar (RapidPack)</button>
             </div>
             
-            <div id="lista-ruta" style="min-height: 200px; margin: 15px 0;"></div>
+            <div id="lista-ruta" style="min-height: 150px; margin: 15px 0; border: 1px dashed var(--border); padding: 10px; border-radius: 8px;"></div>
             
-            <button class="btn btn-p" style="font-size:18px; height: 60px;" onclick="lanzarRuta()">🚀 LANZAR A LA FLOTA</button>
+            <button class="btn btn-p" style="font-size:18px; height: 55px; border: 2px solid #fff;" onclick="lanzar()">🚀 LANZAR A LA FLOTA</button>
 
-            <h3 style="margin-top:20px;">📝 Reporte WhatsApp (Negritas)</h3>
-            <textarea id="repo" style="height: 120px; font-family: monospace;"></textarea>
-            <button class="btn btn-a" onclick="copiarRepo()">Copiar Reporte</button>
+            <h3 style="margin-top:25px;">📝 Reporte WhatsApp</h3>
+            <textarea id="repo" style="height: 100px; font-family: monospace; background: #e9f5ff; color: #000;"></textarea>
+            <button class="btn btn-a" onclick="copiar()">Copiar Reporte</button>
         </div>
     </div>
 
@@ -75,121 +76,126 @@
     const db = supabase.createClient(SB_URL, SB_KEY);
 
     let rutaPlanificada = [];
-    const UBICACION_TRABAJO = { lat: 18.48774, lng: -69.85612 }; 
+    const BASE_SDE = { lat: 18.48774, lng: -69.85612 }; 
 
-    // --- FUNCIÓN DE BÚSQUEDA ---
-    async function buscarEnBaseDeDatos() {
-        const query = document.getElementById('bus').value;
-        const lista = document.getElementById('resultados-busqueda');
-        
-        if (query.length < 2) { lista.style.display = 'none'; return; }
+    function toggleTheme() {
+        const body = document.body;
+        const nuevo = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', nuevo);
+    }
 
-        const { data, error } = await db
-            .from('clientes') // Cambia esto por el nombre exacto de tu tabla si es distinto
-            .select('*')
-            .ilike('nombre', `%${query}%`)
-            .limit(5);
+    async function buscarDB() {
+        const txt = document.getElementById('bus').value;
+        const resDiv = document.getElementById('resultados-busqueda');
+        if (txt.length < 2) { resDiv.style.display = 'none'; return; }
+
+        const { data } = await db.from('clientes').select('*').ilike('nombre', `%${txt}%`).limit(5);
 
         if (data && data.length > 0) {
-            lista.innerHTML = "";
-            lista.style.display = 'block';
+            resDiv.innerHTML = "";
+            resDiv.style.display = 'block';
             data.forEach(c => {
-                const div = document.createElement('div');
-                div.className = 'res-item';
-                div.innerText = c.nombre;
-                div.onclick = () => seleccionarCliente(c);
-                lista.appendChild(div);
+                const item = document.createElement('div');
+                item.className = 'res-item';
+                item.innerText = c.nombre;
+                item.onclick = () => {
+                    document.getElementById('nom').value = c.nombre;
+                    document.getElementById('lat').value = c.lat;
+                    document.getElementById('lng').value = c.lng;
+                    resDiv.style.display = 'none';
+                    document.getElementById('bus').value = "";
+                };
+                resDiv.appendChild(item);
             });
-        } else {
-            lista.style.display = 'none';
         }
-    }
-
-    function seleccionarCliente(c) {
-        document.getElementById('nom').value = c.nombre;
-        document.getElementById('lat').value = c.lat;
-        document.getElementById('lng').value = c.lng;
-        document.getElementById('resultados-busqueda').style.display = 'none';
-        document.getElementById('bus').value = "";
-    }
-
-    // --- LÓGICA DE RUTA ---
-    function toggleTheme() {
-        const b = document.body;
-        const nuevo = b.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        b.setAttribute('data-theme', nuevo);
     }
 
     function agregarARuta() {
-        const n = {
-            nombre: document.getElementById('nom').value,
-            lat: parseFloat(document.getElementById('lat').value),
-            lng: parseFloat(document.getElementById('lng').value),
-            nota: document.getElementById('nota').value
-        };
-        if(!n.nombre || isNaN(n.lat)) return alert("Faltan datos");
-        rutaPlanificada.push(n);
-        actualizarVista();
-        // Limpiar campos
+        const nombre = document.getElementById('nom').value;
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lng = parseFloat(document.getElementById('lng').value);
+        const nota = document.getElementById('nota').value;
+
+        if(!nombre || isNaN(lat)) return alert("Faltan datos");
+
+        rutaPlanificada.push({ nombre, lat, lng, nota });
+        actualizarUI();
         ['nom','lat','lng','nota'].forEach(id => document.getElementById(id).value = "");
     }
 
-    function optimizarRuta() {
+    function optimizar() {
         if(rutaPlanificada.length < 2) return;
-        let optimizada = [];
-        let puntoActual = UBICACION_TRABAJO;
-        let copia = [...rutaPlanificada];
+        let final = [];
+        let actual = BASE_SDE;
+        let temp = [...rutaPlanificada];
 
-        while(copia.length > 0) {
-            let masCercanoIdx = 0;
-            let distMin = Infinity;
-            copia.forEach((dest, i) => {
-                const d = Math.sqrt(Math.pow(dest.lat - puntoActual.lat, 2) + Math.pow(dest.lng - puntoActual.lng, 2));
-                if(d < distMin) { distMin = d; masCercanoIdx = i; }
+        while(temp.length > 0) {
+            let cercano = 0;
+            let dMin = Infinity;
+            temp.forEach((dest, i) => {
+                const d = Math.sqrt(Math.pow(dest.lat - actual.lat, 2) + Math.pow(dest.lng - actual.lng, 2));
+                if(d < dMin) { dMin = d; cercano = i; }
             });
-            const destino = copia.splice(masCercanoIdx, 1)[0];
-            optimizada.push(destino);
-            puntoActual = { lat: destino.lat, lng: destino.lng };
+            const p = temp.splice(cercano, 1)[0];
+            final.push(p);
+            actual = { lat: p.lat, lng: p.lng };
         }
-        rutaPlanificada = optimizada;
-        actualizarVista();
+        rutaPlanificada = final;
+        actualizarUI();
     }
 
-    function actualizarVista() {
-        const div = document.getElementById('lista-ruta');
+    function actualizarUI() {
+        const lista = document.getElementById('lista-ruta');
         const repo = document.getElementById('repo');
-        div.innerHTML = "";
-        let texto = `*Ruta RapidPack SDE*\n------------------\n`;
+        lista.innerHTML = "";
+        let txtRepo = `*Ruta RapidPack SDE*\n------------------\n`;
 
         rutaPlanificada.forEach((c, i) => {
-            div.innerHTML += `
+            lista.innerHTML += `
                 <div class="item-ruta">
-                    <b>${i+1}. ${c.nombre}</b>
-                    <br><small style="color:var(--a)">${c.nota ? 'Obs: ' + c.nota : ''}</small>
+                    <div>
+                        <b>${i+1}. ${c.nombre}</b><br>
+                        <small style="color:var(--a)">${c.nota ? 'Obs: ' + c.nota : ''}</small>
+                    </div>
+                    <button onclick="rutaPlanificada.splice(${i},1);actualizarUI();" style="background:none;border:none;color:red;cursor:pointer;">✖</button>
                 </div>`;
             
-            const notaWasp = c.nota ? `\n   Obs: *${c.nota}*` : '';
-            texto += `${i+1}. ${c.nombre}${notaWasp}\n`;
+            const notaBold = c.nota ? `\n   Obs: *${c.nota}*` : '';
+            txtRepo += `${i+1}. ${c.nombre}${notaBold}\n`;
         });
-        repo.value = texto;
+        repo.value = txtRepo;
     }
 
-    async function lanzarRuta() {
-        if(rutaPlanificada.length === 0) return alert("Agrega clientes primero");
-        // Limpiar despacho actual
-        await db.from('ruta_activa').delete().neq('estado', 'mantenimiento');
-        // Insertar nueva ruta
+    async function lanzar() {
+        if(rutaPlanificada.length === 0) return alert("Ruta vacía");
+        
+        // 1. Limpiar tabla ruta_activa
+        const { error: e1 } = await db.from('ruta_activa').delete().neq('estado', 'limpieza_total');
+        if(e1) return alert("Error al limpiar: " + e1.message);
+
+        // 2. Insertar nueva ruta
         const datos = rutaPlanificada.map((c, i) => ({
-            nombre: c.nombre, lat: c.lat, lng: c.lng, nota_entrega: c.nota, orden: i+1
+            nombre: c.nombre,
+            lat: c.lat,
+            lng: c.lng,
+            nota_entrega: c.nota || "",
+            orden: i + 1
         }));
-        const { error } = await db.from('ruta_activa').insert(datos);
-        if(!error) alert("🚀 ¡Ruta enviada! El monitor y el chofer ya pueden verla.");
+
+        const { error: e2 } = await db.from('ruta_activa').insert(datos);
+        
+        if(e2) {
+            console.error(e2);
+            alert("Error de Supabase: " + e2.message);
+        } else {
+            alert("🚀 ¡RUTA LANZADA! Monitor y App sincronizados.");
+        }
     }
 
-    function copiarRepo() {
+    function copiar() {
         document.getElementById('repo').select();
         document.execCommand('copy');
-        alert("Copiado para enviar por WhatsApp ✅");
+        alert("¡Reporte listo para pegar en WhatsApp!");
     }
 </script>
 </body>
