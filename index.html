@@ -3,102 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruterik Pro - RapidPack SDE</title>
-    <link rel="icon" type="image/jpeg" href="logoCreator_imagetologo.jpg">
+    <title>Ruterik Pro - Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --primary: #00c853; --accent: #2196f3; --dark: #2d3436; --gray: #f1f2f6; --edit: #ffc107; --danger: #ff5252; --success: #4caf50; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #1a1a1b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('unnamed.jpg'); background-size: cover; display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        #main-dashboard { display: none; background: url('unnamed.jpg') no-repeat center fixed; background-size: cover; height: 100vh; flex-direction: column; }
-        
-        .header { background: rgba(255,255,255,0.92); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
-        .container { display: grid; grid-template-columns: 410px 1fr; gap: 15px; padding: 15px; flex: 1; overflow: hidden; }
-        .card { background: rgba(255,255,255,0.96); border-radius: 18px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow-y: auto; }
-        
-        #mapa-chofer { height: 230px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--accent); display: none; }
+        /* TEMA DINÁMICO */
+        :root { --bg: #f4f7f6; --card: #ffffff; --text: #2d3436; --p: #00c853; --a: #2196f3; --border: #ddd; }
+        [data-theme="dark"] { --bg: #1a1a1b; --card: #2d2d2e; --text: #f1f2f6; --border: #444; }
 
-        /* ESTILO RUTA Y REMARKS */
-        .item-ruta { background: white; padding: 14px; border-radius: 12px; margin-bottom: 10px; border-left: 6px solid var(--primary); display: flex; flex-direction: column; font-size: 14px; transition: 0.4s; }
-        .item-ruta.llegando { background: #e8f5e9; border-left-color: var(--success); animation: pulse 1.5s infinite; }
-        .remark-box { margin-top: 8px; font-size: 12px; color: #555; background: #f9f9f9; padding: 8px; border-radius: 6px; border-left: 3px solid #ddd; }
-        .remark-box b { color: var(--dark); }
-
-        @keyframes pulse { 0% { box-shadow: 0 0 0px rgba(76,175,80,0.4); } 50% { box-shadow: 0 0 15px rgba(76,175,80,0.6); } 100% { box-shadow: 0 0 0px rgba(76,175,80,0.4); } }
-
-        .btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 8px; }
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
-        #repo { height: 100px; background: #fffde7; font-size: 13px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
+        .header { background: var(--card); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--p); }
+        .container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; }
+        .card { background: var(--card); border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border); }
         
-        #modal-agenda { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; }
-        .modal-content { background: white; width: 90%; max-width: 800px; height: 80vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-bottom: 5px; }
+        .btn-p { background: var(--p); color: white; }
+        .btn-a { background: var(--a); color: white; }
+        
+        .item-ruta { background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--p); position: relative; }
+        .nota-negrita { font-weight: bold; color: var(--a); display: block; margin-top: 5px; }
     </style>
 </head>
-<body>
+<body data-theme="light">
 
-    <div id="login-screen">
-        <div style="background:white; padding:40px; border-radius:20px; text-align:center; width:300px;">
-            <img src="logoCreator_imagetologo.jpg" width="80" style="border-radius:10px;">
-            <h2>Ruterik Admin</h2>
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="pass" placeholder="Password">
-            <button class="btn" style="background:var(--primary); color:white;" onclick="login()">ENTRAR</button>
+    <div class="header">
+        <h2>RUTERIK <span style="color:var(--p)">PRO</span> 🚚</h2>
+        <div>
+            <button onclick="toggleTheme()" class="btn" style="width:auto; padding:8px 15px;">🌓 Tema</button>
+            <button onclick="location.href='despacho.html'" class="btn btn-a" style="width:auto; padding:8px 15px;">📊 Ir a Despacho</button>
         </div>
     </div>
 
-    <div id="modal-agenda">
-        <div class="modal-content">
+    <div class="container">
+        <div class="card">
+            <h3>📍 Nueva Parada</h3>
+            <input type="text" id="nom" placeholder="Nombre del Cliente / ID RP">
+            <input type="text" id="lat" placeholder="Latitud">
+            <input type="text" id="lng" placeholder="Longitud">
+            <textarea id="nota" placeholder="Nota de entrega (Saldrá en negrita en WhatsApp)"></textarea>
+            <button class="btn btn-p" onclick="agregarARuta()">Agregar a la Lista</button>
+        </div>
+
+        <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>🗂️ Agenda Completa</h3>
-                <button onclick="cerrarAgenda()" style="padding:5px 15px; cursor:pointer;">X</button>
+                <h3>🗺️ Ruta del Día</h3>
+                <button class="btn btn-a" style="width:150px; background:#ff9800;" onclick="optimizarRuta()">⚡ Optimizar (Desde Trabajo)</button>
             </div>
-            <div id="lista-completa" style="overflow-y:auto; margin-top:15px;"></div>
-        </div>
-    </div>
+            
+            <div id="lista-ruta" style="min-height: 200px; margin: 15px 0;"></div>
+            
+            <button class="btn btn-p" style="font-size:18px;" onclick="lanzarRuta()">🚀 LANZAR RUTA A LA FLOTA</button>
 
-    <div id="main-dashboard">
-        <div class="header">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <img src="logoCreator_imagetologo.jpg" height="40" style="border-radius:8px;">
-                <span style="font-weight:900; font-size:22px;">RAPIDPACK <span style="color:var(--primary)">SDE</span></span>
-            </div>
-            <div style="display:flex; gap:10px;">
-                <button onclick="toggleMapa()" style="background:#4285F4; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;">🛰️ VER CHOFER</button>
-                <button onclick="verAgenda()" style="background:var(--accent); color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;">🗂️ CLIENTES</button>
-                <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;">SALIR</button>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="card">
-                <div id="mapa-chofer"></div>
-                <h3>🔍 Buscador</h3>
-                <input type="text" id="bus" oninput="buscar()" placeholder="Buscar cliente...">
-                <div id="res"></div>
-                <hr>
-                <h3 id="form-title">🆕 Registro de Cliente</h3>
-                <input type="hidden" id="edit-id">
-                <input type="text" id="n-id" placeholder="Código RP">
-                <input type="text" id="n-nom" placeholder="Nombre completo">
-                <div style="display:flex; gap:5px;"><input id="n-lat1" placeholder="Casa Lat"><input id="n-lng1" placeholder="Casa Lng"></div>
-                <div style="display:flex; gap:5px;"><input id="n-lat2" placeholder="Trabajo Lat"><input id="n-lng2" placeholder="Trabajo Lng"></div>
-                <textarea id="n-com" placeholder="Remarks (Usa ** para negrita o - para listas)"></textarea>
-                <button id="btn-save" class="btn" style="background:var(--primary); color:white;" onclick="guardar()">GUARDAR</button>
-                <button id="btn-cancel" class="btn" style="display:none; background:#ccc;" onclick="cancelarEdicion()">CANCELAR</button>
-            </div>
-
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h3 style="margin:0;">📍 Ruta de Hoy (<span id="count">0</span>)</h3>
-                    <button class="btn" style="background:#ff9800; color:white; width:250px; margin:0;" onclick="optimizar()">⚡ OPTIMIZAR ORDEN</button>
-                </div>
-                <div id="lista" style="flex:1; overflow-y:auto; min-height:250px;"></div>
-                <textarea id="repo" readonly></textarea>
-                <button class="btn" style="background:var(--accent); color:white; margin-top:10px;" onclick="copiar()">COPIAR WHATSAPP</button>
-            </div>
+            <h3 style="margin-top:20px;">📝 Reporte WhatsApp</h3>
+            <textarea id="repo" style="height: 150px; font-family: monospace;"></textarea>
+            <button class="btn btn-a" onclick="copiarRepo()">Copiar para WhatsApp</button>
         </div>
     </div>
 
@@ -106,172 +64,85 @@
     const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
     const db = supabase.createClient(SB_URL, SB_KEY);
-    const BASE = { lat: 18.48774, lng: -69.85612 };
-    let ruta = [];
-    let map, markerChofer;
 
-    // --- PROCESADOR MARKDOWN BÁSICO ---
-    function parseMD(text) {
-        if (!text) return "";
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Negritas
-            .replace(/\n- (.*?)/g, '<br>• $1')      // Listas
-            .replace(/\n/g, '<br>');                // Saltos de línea
+    let rutaPlanificada = [];
+    const UBICACION_TRABAJO = { lat: 18.48774, lng: -69.85612 }; // RapidPack SDE
+
+    function toggleTheme() {
+        const b = document.body;
+        const nuevo = b.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        b.setAttribute('data-theme', nuevo);
     }
 
-    function initMap() {
-        if (map) return;
-        map = L.map('mapa-chofer').setView([BASE.lat, BASE.lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        markerChofer = L.marker([BASE.lat, BASE.lng]).addTo(map);
-    }
-
-    function toggleMapa() {
-        const m = document.getElementById('mapa-chofer');
-        m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        if (m.style.display === 'block') { initMap(); setTimeout(() => map.invalidateSize(), 100); }
-    }
-
-    // --- REALTIME ---
-    db.channel('gps').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, p => {
-        const cLoc = { lat: p.new.lat, lng: p.new.lng };
-        if (markerChofer) { markerChofer.setLatLng([cLoc.lat, cLoc.lng]); map.panTo([cLoc.lat, cLoc.lng]); }
-        verificarLlegada(cLoc);
-    }).subscribe();
-
-    function verificarLlegada(cLoc) {
-        ruta.forEach((c, i) => {
-            const dist = Math.sqrt(Math.pow(c.lat - cLoc.lat, 2) + Math.pow(c.lng - cLoc.lng, 2));
-            const el = document.getElementById(`item-${i}`);
-            if (dist < 0.00075) { 
-                el.classList.add('llegando');
-                el.querySelector('.status').innerHTML = " ✅ CHOFER EN EL PUNTO";
-            } else {
-                el.classList.remove('llegando');
-                el.querySelector('.status').innerText = "";
-            }
-        });
-    }
-
-    // --- SESION ---
-    async function login() {
-        const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('pass').value });
-        if (error) alert("Error");
-    }
-    async function logout() { await db.auth.signOut(); location.reload(); }
-    db.auth.onAuthStateChange((ev, ses) => {
-        document.getElementById('login-screen').style.display = ses ? 'none' : 'flex';
-        document.getElementById('main-dashboard').style.display = ses ? 'flex' : 'none';
-    });
-
-    // --- BUSCADOR ---
-    async function buscar() {
-        const t = document.getElementById('bus').value;
-        if(t.length < 2) return;
-        const { data } = await db.from('clientes').select('*').or(`nombre.ilike.%${t}%,codigo_rp.ilike.%${t}%`).limit(5);
-        renderResultados(data, 'res');
-    }
-
-    function renderResultados(data, target) {
-        const r = document.getElementById(target); r.innerHTML = "";
-        data.forEach(c => {
-            const hasC = (c.lat && c.lng); const hasT = (c.lat_2 && c.lng_2);
-            r.innerHTML += `<div style="background:white; padding:10px; border-radius:10px; margin-bottom:5px; border:1px solid #ddd;">
-                <button style="float:right; font-size:10px;" onclick='prepararEdicion(${JSON.stringify(c)})'>✏️</button>
-                <b>${c.nombre}</b><br>
-                <button class="btn-loc ${hasC ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Casa")'>🏠 Casa</button>
-                <button class="btn-loc ${hasT ? 'has-data' : ''}" onclick='add(${JSON.stringify(c)}, "Trabajo")'>🏢 Trab</button>
-            </div>`;
-        });
-    }
-
-    async function verAgenda() {
-        document.getElementById('modal-agenda').style.display = 'flex';
-        const { data } = await db.from('clientes').select('*').order('nombre', { ascending: true });
-        renderResultados(data, 'lista-completa');
-    }
-    function cerrarAgenda() { document.getElementById('modal-agenda').style.display = 'none'; }
-
-    // --- RUTA ---
-    function add(c, tipo) {
-        const lat = (tipo === "Casa") ? c.lat : c.lat_2;
-        const lng = (tipo === "Casa") ? c.lng : c.lng_2;
-        ruta.push({ nombre: c.nombre, id: c.codigo_rp, lat, lng, tipo, comentario: c.comentario });
-        actualizar();
-    }
-
-    function actualizar() {
-        const l = document.getElementById('lista'); const repo = document.getElementById('repo');
-        l.innerHTML = ""; document.getElementById('count').innerText = ruta.length;
-        const hoy = new Date();
-        const f = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-        const s = hoy.getHours() < 12 ? "Buenos días" : (hoy.getHours() < 18 ? "Buenas tardes" : "Buenas noches");
-        
-        let txt = `*${s}, esta es la ruta para hoy ${f}:* \n----------------------------\n`;
-        ruta.forEach((c, i) => {
-            const remHtml = c.comentario ? `<div class="remark-box"><b>Nota:</b> ${parseMD(c.comentario)}</div>` : "";
-            l.innerHTML += `
-                <div class="item-ruta" id="item-${i}">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>${i+1}. ${c.nombre} <small style="color:#777">(${c.tipo})</small><span class="status"></span></span>
-                        <button onclick="ruta.splice(${i},1); actualizar();" style="border:none; color:red; background:none; cursor:pointer; font-weight:bold;">X</button>
-                    </div>
-                    ${remHtml}
-                </div>`;
-            txt += `${i+1}. ${c.nombre}${c.comentario ? ' (Obs: ' + c.comentario.replace(/\*\*/g, '') + ')' : ''}\n`;
-        });
-        repo.value = ruta.length > 0 ? txt : "";
-    }
-
-    function optimizar() {
-        if(ruta.length < 2) return;
-        let opt = []; let cur = BASE; let copy = [...ruta];
-        while(copy.length > 0) {
-            let nIdx = 0; let minDist = Infinity;
-            copy.forEach((c, i) => {
-                let d = Math.sqrt(Math.pow(c.lat-cur.lat,2) + Math.pow(c.lng-cur.lng,2));
-                if(d < minDist) { minDist = d; nIdx = i; }
-            });
-            cur = copy[nIdx]; opt.push(copy.splice(nIdx, 1)[0]);
-        }
-        ruta = opt; actualizar();
-    }
-
-    function prepararEdicion(c) {
-        cerrarAgenda(); document.getElementById('edit-id').value = c.id;
-        document.getElementById('n-id').value = c.codigo_rp || ""; document.getElementById('n-nom').value = c.nombre;
-        document.getElementById('n-lat1').value = c.lat || ""; document.getElementById('n-lng1').value = c.lng || "";
-        document.getElementById('n-lat2').value = c.lat_2 || ""; document.getElementById('n-lng2').value = c.lng_2 || "";
-        document.getElementById('n-com').value = c.comentario || "";
-        document.getElementById('form-title').innerText = "✏️ Editando Cliente";
-        const btn = document.getElementById('btn-save'); btn.innerText = "ACTUALIZAR"; btn.style.background = "var(--accent)";
-        document.getElementById('btn-cancel').style.display = "block";
-    }
-
-    function cancelarEdicion() {
-        document.getElementById('edit-id').value = ""; document.getElementById('n-id').value = ""; document.getElementById('n-nom').value = "";
-        document.getElementById('n-lat1').value = ""; document.getElementById('n-lng1').value = "";
-        document.getElementById('n-lat2').value = ""; document.getElementById('n-lng2').value = "";
-        document.getElementById('n-com').value = ""; document.getElementById('form-title').innerText = "🆕 Registro";
-        const btn = document.getElementById('btn-save'); btn.innerText = "GUARDAR"; btn.style.background = "var(--primary)";
-        document.getElementById('btn-cancel').style.display = "none";
-    }
-
-    async function guardar() {
-        const id = document.getElementById('edit-id').value;
-        const d = { 
-            nombre: document.getElementById('n-nom').value, 
-            codigo_rp: document.getElementById('n-id').value || null, 
-            lat: parseFloat(document.getElementById('n-lat1').value) || null, 
-            lng: parseFloat(document.getElementById('n-lng1').value) || null, 
-            lat_2: parseFloat(document.getElementById('n-lat2').value) || null, 
-            lng_2: parseFloat(document.getElementById('n-lng2').value) || null,
-            comentario: document.getElementById('n-com').value || null
+    function agregarARuta() {
+        const n = {
+            nombre: document.getElementById('nom').value,
+            lat: parseFloat(document.getElementById('lat').value),
+            lng: parseFloat(document.getElementById('lng').value),
+            nota: document.getElementById('nota').value
         };
-        if(id) await db.from('clientes').update(d).eq('id', id); else await db.from('clientes').insert([d]);
-        location.reload();
+        if(!n.nombre || !n.lat) return alert("Completa los datos");
+        rutaPlanificada.push(n);
+        actualizarVista();
+        document.getElementById('nom').value = ""; document.getElementById('nota').value = "";
     }
-    function copiar() { document.getElementById('repo').select(); document.execCommand('copy'); alert("Copiado"); }
+
+    function optimizarRuta() {
+        if(rutaPlanificada.length < 2) return;
+        let optimizada = [];
+        let puntoActual = UBICACION_TRABAJO;
+        let copia = [...rutaPlanificada];
+
+        while(copia.length > 0) {
+            let masCercanoIdx = 0;
+            let distMin = Infinity;
+            copia.forEach((dest, i) => {
+                const d = Math.sqrt(Math.pow(dest.lat - puntoActual.lat, 2) + Math.pow(dest.lng - puntoActual.lng, 2));
+                if(d < distMin) { distMin = d; masCercanoIdx = i; }
+            });
+            const destino = copia.splice(masCercanoIdx, 1)[0];
+            optimizada.push(destino);
+            puntoActual = { lat: destino.lat, lng: destino.lng };
+        }
+        rutaPlanificada = optimizada;
+        actualizarVista();
+    }
+
+    function actualizarVista() {
+        const div = document.getElementById('lista-ruta');
+        const repo = document.getElementById('repo');
+        div.innerHTML = "";
+        let texto = `*Ruta RapidPack SDE*\n------------------\n`;
+
+        rutaPlanificada.forEach((c, i) => {
+            div.innerHTML += `
+                <div class="item-ruta">
+                    <b>${i+1}. ${c.nombre}</b>
+                    <span class="nota-negrita">${c.nota ? 'Obs: ' + c.nota : ''}</span>
+                </div>`;
+            
+            // Negrita para WhatsApp en la nota
+            const notaWasp = c.nota ? `\n   Obs: *${c.nota}*` : '';
+            texto += `${i+1}. ${c.nombre}${notaWasp}\n`;
+        });
+        repo.value = texto;
+    }
+
+    async function lanzarRuta() {
+        if(rutaPlanificada.length === 0) return;
+        await db.from('ruta_activa').delete().neq('estado', 'mantenimiento');
+        const datos = rutaPlanificada.map((c, i) => ({
+            nombre: c.nombre, lat: c.lat, lng: c.lng, nota_entrega: c.nota, orden: i+1
+        }));
+        await db.from('ruta_activa').insert(datos);
+        alert("🚀 Ruta enviada al Monitor y a la App del Chofer.");
+    }
+
+    function copiarRepo() {
+        document.getElementById('repo').select();
+        document.execCommand('copy');
+        alert("Reporte copiado");
+    }
 </script>
 </body>
 </html>
