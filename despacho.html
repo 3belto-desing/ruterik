@@ -1,47 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RapidPack Live Radar 🛰️</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
-        body { margin: 0; display: flex; height: 100vh; background: #1a1a1b; color: white; font-family: sans-serif; }
-        #sidebar { width: 300px; padding: 20px; background: #242526; border-right: 2px solid #00c853; }
-        #map { flex: 1; }
-        .gps-on { color: #00c853; font-weight: bold; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #111; }
+        
+        /* Mapa a pantalla completa */
+        #map { width: 100vw; height: 100vh; z-index: 1; }
+
+        /* Panel de Control Flotante */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(20, 20, 22, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 6px solid #ff3d00; /* Rojo RapidPack */
+            width: 280px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #333;
+            margin-top: 10px;
+        }
+
+        .online { background: #00c853; color: black; box-shadow: 0 0 15px #00c853; }
+        
+        h2 { margin: 0; font-size: 20px; color: #ff3d00; letter-spacing: 1px; }
+        p { margin: 5px 0; font-size: 14px; color: #ccc; }
     </style>
 </head>
 <body>
-    <div id="sidebar">
-        <h2>Radar SDE 🚚</h2>
-        <p id="status">📡 Buscando señal...</p>
-        <hr>
-        <div id="lista-clientes"></div>
+
+    <div class="info-panel">
+        <h2>RAPIDPACK SDE</h2>
+        <p>Monitor de Flota en Vivo</p>
+        <div id="status-tag" class="status-badge">🛰️ BUSCANDO SEÑAL...</div>
+        <div id="reloj" style="font-size: 11px; margin-top: 10px; color: #888;"></div>
     </div>
+
     <div id="map"></div>
 
 <script>
-    const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
+    // Configuración de Supabase
+    const SB_URL = "https://trdfieobkewwjhzxwpxc.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk";
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    // 1. Inicializar Mapa
-    var map = L.map('map').setView([18.4877, -69.8561], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    // 1. Inicializar Mapa (Vista inicial en SDE)
+    var map = L.map('map', { zoomControl: false }).setView([18.4877, -69.8561], 15);
 
-    // 2. Icono del Camioncito
-    var iconoCamion = L.icon({
-        iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854878.png', 
-        iconSize: [45, 45]
+    // Capa de mapa oscuro (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; RapidPack SDE'
+    }).addTo(map);
+
+    // 2. Definir el Camioncito Rojo
+    var redTruckIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048329.png',
+        iconSize: [50, 50],
+        iconAnchor: [25, 25],
+        popupAnchor: [0, -20]
     });
-    var markerChofer = L.marker([18.4877, -69.8561], {icon: iconoCamion}).addTo(map);
 
-    // 3. Escuchar ubicación en tiempo real
-    db.channel('rastreo').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, payload => {
-        const { lat, lng } = payload.new;
-        markerChofer.setLatLng([lat, lng]); // Mover el camión
-        map.panTo([lat, lng]); // Seguir con la cámara
-        document.getElementById('status').innerHTML = "📡 <span class='gps-on'>CHOFER EN VIVO</span>";
-    }).subscribe();
-</script>
-</body>
-</html>
+    // Crear el marcador del chofer (oculto hasta recibir señal)
+    var truckMarker = L.marker([0, 0], { icon: redTruckIcon }).addTo(map);
+    truckMarker.bindPopup("<b>Unidad RapidPack 01</b><br>Chofer en ruta").openPopup();
+
+    // 3. Función para mover el camión con suavidad
+    function actualizarPosicion(lat, lng) {
+        if (!lat || !lng) return;
+
+        const nuevaPos =
