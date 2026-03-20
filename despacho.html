@@ -12,7 +12,6 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; display: flex; }
         
-        /* Panel Izquierdo */
         #sidebar { 
             width: 300px; height: 100%; background: #111; color: white; 
             border-right: 2px solid #333; display: flex; flex-direction: column; z-index: 2000;
@@ -20,11 +19,9 @@
         .header { padding: 20px; background: #000; border-bottom: 3px solid #ff3d00; }
         .route-list { flex: 1; overflow-y: auto; padding: 15px; }
 
-        /* Contenedor del Mapa (ESTO ES LO QUE FALLABA) */
         #map-container { flex: 1; position: relative; height: 100%; background: #222; }
         #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 
-        /* Estilo de los Clientes */
         .client-card { 
             background: #222; margin-bottom: 12px; padding: 15px; border-radius: 10px;
             border-left: 5px solid #555; display: flex; justify-content: space-between; align-items: center;
@@ -32,7 +29,7 @@
         .completed { border-left-color: #00c853 !important; opacity: 0.6; }
         .check { width: 20px; height: 20px; border: 2px solid #555; border-radius: 50%; }
         .completed .check { background: #00c853; border-color: #00c853; }
-        .dist { font-size: 11px; color: #ff9800; display: block; margin-top: 4px; }
+        .dist { font-size: 11px; color: #ff9800; display: block; margin-top: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -40,10 +37,9 @@
     <div id="sidebar">
         <div class="header">
             <h2 style="margin:0; color:#ff3d00;">RAPIDPACK</h2>
-            <div id="status" style="font-size: 12px; color: #00c853; margin-top:5px;">● SISTEMA ACTIVO</div>
+            <div id="status" style="font-size: 12px; color: #00c853; margin-top:5px;">● RADAR ACTIVO</div>
         </div>
-        <div class="route-list" id="lista">
-            </div>
+        <div class="route-list" id="lista"></div>
     </div>
 
     <div id="map-container">
@@ -51,10 +47,8 @@
     </div>
 
 <script>
-    // 1. Configuración
     const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
 
-    // 2. Inicializar Mapa con retraso para asegurar que el DIV exista
     var map = L.map('map', { zoomControl: false }).setView([18.4877, -69.8561], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
@@ -63,7 +57,6 @@
 
     let clientes = [];
 
-    // 3. Funciones de Lógica
     async function cargarDatos() {
         const { data } = await db.from('ruta_activa').select('*').order('orden', { ascending: true });
         clientes = data || [];
@@ -82,7 +75,6 @@
                     <div class="check"></div>
                 </div>
             `;
-            // Dibujar punto en mapa
             L.circleMarker([c.lat, c.lng], { color: isDone ? '#00c853' : '#ff9800', radius: 6 }).addTo(map);
         });
     }
@@ -103,9 +95,17 @@
             if (c.estado !== 'Entregado') {
                 const metros = calcularDistancia(lat, lng, c.lat, c.lng);
                 const el = document.getElementById(`d-${c.id}`);
-                if (el) el.innerText = `A ${metros.toFixed(0)} metros`;
+                
+                if (el) {
+                    // LÓGICA DE UNIDADES: km o metros
+                    if (metros >= 1000) {
+                        const km = metros / 1000;
+                        el.innerText = `A ${km.toFixed(1)} km`; // Ejemplo: A 14.5 km
+                    } else {
+                        el.innerText = `A ${metros.toFixed(0)} metros`; // Ejemplo: A 450 metros
+                    }
+                }
 
-                // AUTO-CHECK A 15 METROS (Más seguro que 5m)
                 if (metros <= 15) {
                     await db.from('ruta_activa').update({ estado: 'Entregado' }).eq('id', c.id);
                 }
@@ -113,7 +113,6 @@
         }
     }
 
-    // 4. Suscribirse
     db.channel('flota')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer' }, p => actualizarGps(p.new.lat, p.new.lng))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'ruta_activa' }, () => cargarDatos())
