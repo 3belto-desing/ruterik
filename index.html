@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>RapidPack Admin - Control Maestro 🚚</title>
+    <title>RapidPack Admin - Centro de Despacho 🚚</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --rp-red: #ff3d00; --rp-black: #0b0b0b; --rp-grey: #1a1a1b; --rp-green: #00c853; }
@@ -10,13 +10,11 @@
         
         header { padding: 15px 30px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rp-red); }
         
-        main { padding: 20px; max-width: 900px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        main { padding: 20px; max-width: 1000px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .card { background: var(--rp-grey); border-radius: 12px; padding: 20px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .full-width { grid-column: 1 / -1; }
 
         /* BUSCADOR */
         .search-box { width: 100%; padding: 15px; background: #222; border: 2px solid #444; color: white; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
-        .search-box:focus { border-color: var(--rp-red); outline: none; }
         
         #cliente-seleccionado { display: none; margin-top: 20px; padding: 15px; background: #222; border-radius: 10px; border: 1px dashed #444; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
@@ -29,38 +27,33 @@
         /* WHATSAPP */
         .btn-wa { width: 100%; background: #25d366; color: black; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; gap: 5px; }
 
-        /* FORMULARIO REGISTRO */
-        .form-section { margin-bottom: 15px; padding: 10px; background: #222; border-radius: 8px; border-left: 3px solid #444; }
-        .form-section.active { border-left-color: var(--rp-red); }
+        /* FORMULARIO */
         label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; }
         .f-row { display: flex; gap: 8px; margin-bottom: 8px; }
         input { background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 6px; flex: 1; font-size: 13px; }
-        input:focus { border-color: var(--rp-red); outline: none; }
+        .form-section { padding: 10px; background: #222; border-radius: 8px; border-left: 3px solid #444; margin-bottom: 10px; }
 
         /* BORRADOR */
-        .item-draft { background: #252526; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); font-size: 13px; }
-        .btn-del { background: none; border: none; color: #ff5555; cursor: pointer; font-weight: bold; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .item-draft { background: #252526; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); }
     </style>
 </head>
 <body>
 
 <header>
-    <h2 style="color: var(--rp-red); margin:0; font-size: 22px;">RAPIDPACK ADMIN</h2>
+    <h2 style="color: var(--rp-red); margin:0;">RAPIDPACK ADMIN</h2>
     <button style="background:var(--rp-grey); color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="location.href='despacho.html'">🖥️ IR AL MONITOR</button>
 </header>
 
 <main>
     <div class="card">
-        <h3 style="margin:0 0 15px 0; color:var(--rp-red);">🔍 Buscador Rápido</h3>
+        <h3 style="margin:0 0 15px 0; color:var(--rp-red);">🔍 Buscar y Despachar</h3>
         <input type="text" id="buscador" class="search-box" placeholder="Nombre del cliente..." oninput="buscar()">
         
         <div id="cliente-seleccionado">
-            <h2 id="view-nombre" style="margin:0; font-size:18px;"></h2>
+            <h2 id="view-nombre" style="margin:0; font-size:18px; color:var(--rp-red);"></h2>
             <p id="view-telefono" style="margin:5px 0; color:#888; font-size:12px;"></p>
             
-            <p style="margin:15px 0 5px 0; font-size:11px; color:#aaa;">1. AVISAR POR WHATSAPP:</p>
+            <p style="margin:15px 0 5px 0; font-size:11px; color:#aaa;">1. AVISAR POR WHATSAPP (CON SALUDO):</p>
             <div class="btn-group">
                 <button id="wa-casa" class="btn-wa" onclick="enviarWA('casa')">WA CASA</button>
                 <button id="wa-trabajo" class="btn-wa" onclick="enviarWA('trabajo')">WA TRABAJO</button>
@@ -76,20 +69,20 @@
         </div>
 
         <div id="card-borrador" style="display:none; margin-top:20px; border-top:1px solid #333; padding-top:20px;">
-            <h3 style="margin:0 0 10px 0;">📄 Ruta Lista</h3>
+            <h3 style="margin:0 0 10px 0;">📄 Ruta en Borrador</h3>
             <div id="lista-borrador"></div>
-            <button style="width:100%; background:var(--rp-green); border:none; padding:15px; font-weight:bold; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="lanzarRuta()">🚀 LANZAR AHORA</button>
+            <button style="width:100%; background:var(--rp-green); border:none; padding:15px; font-weight:bold; border-radius:8px; margin-top:10px; cursor:pointer; font-size: 16px;" onclick="lanzarRuta()">🚀 ENVIAR A DESPACHO.HTML</button>
         </div>
     </div>
 
     <div class="card">
         <h3 style="margin:0 0 15px 0; color:#aaa;">➕ Registro de Cliente</h3>
         <div class="f-row">
-            <div style="flex:2"><label>Nombre</label><input type="text" id="n-nombre" placeholder="Ej: Juan Perez"></div>
-            <div style="flex:1"><label>WhatsApp</label><input type="tel" id="n-telefono" placeholder="8091234567"></div>
+            <div style="flex:2"><label>Nombre</label><input type="text" id="n-nombre"></div>
+            <div style="flex:1"><label>WhatsApp</label><input type="tel" id="n-telefono" placeholder="809..."></div>
         </div>
 
-        <div class="form-section active">
+        <div class="form-section" style="border-left-color: #3498db;">
             <label>🏠 UBICACIÓN CASA</label>
             <div class="f-row">
                 <input type="number" step="any" id="n-lat-casa" placeholder="Latitud">
@@ -97,7 +90,7 @@
             </div>
         </div>
 
-        <div class="form-section">
+        <div class="form-section" style="border-left-color: #9b59b6;">
             <label>💼 UBICACIÓN TRABAJO</label>
             <div class="f-row">
                 <input type="number" step="any" id="n-lat-trabajo" placeholder="Latitud">
@@ -106,14 +99,14 @@
         </div>
 
         <div class="form-section" style="border-left-color: #f39c12;">
-            <label>⏳ UBICACIÓN TEMPORAL (Solo para hoy)</label>
+            <label>⏳ UBICACIÓN TEMPORAL (Solo hoy)</label>
             <div class="f-row">
                 <input type="number" step="any" id="n-lat-temporal" placeholder="Latitud">
                 <input type="number" step="any" id="n-lng-temporal" placeholder="Longitud">
             </div>
         </div>
 
-        <button onclick="guardarNuevo()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer;">💾 GUARDAR CLIENTE EN SISTEMA</button>
+        <button onclick="guardarNuevo()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer;">💾 GUARDAR CLIENTE</button>
     </div>
 </main>
 
@@ -127,6 +120,17 @@
     async function init() {
         const { data } = await db.from('clientes').select('*');
         clientesRaw = data || [];
+    }
+
+    function getSaludo() {
+        const hora = new Date().getHours();
+        if (hora < 12) return "Buenos días";
+        if (hora < 18) return "Buenas tardes";
+        return "Buenas noches";
+    }
+
+    function getFecha() {
+        return new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     }
 
     function buscar() {
@@ -148,7 +152,9 @@
 
     function enviarWA(tipo) {
         if (!clienteActivo.telefono) return alert("Falta teléfono");
-        const msg = `Hola *${clienteActivo.nombre}*, de RapidPack. Tu pedido va en camino a tu ubicación de *${tipo.toUpperCase()}*. 🚚`;
+        const saludo = getSaludo();
+        const fecha = getFecha();
+        const msg = `${saludo} *${clienteActivo.nombre}*, ruta para hoy ${fecha}. Te informa RapidPack Logistics que tu pedido va en camino a tu ubicación de *${tipo.toUpperCase()}*. 🚚 Por favor estar pendiente.`;
         window.open(`https://wa.me/${clienteActivo.telefono}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
@@ -165,13 +171,13 @@
         document.getElementById('lista-borrador').innerHTML = borrador.map((item, i) => `
             <div class="item-draft">
                 <span><b>${i+1}.</b> ${item.nombre}</span>
-                <button class="btn-del" onclick="borrador.splice(${i},1); actualizarBorradorUI()">✕</button>
+                <button style="background:none; border:none; color:#ff5555; cursor:pointer;" onclick="borrador.splice(${i},1); actualizarBorradorUI()">✕</button>
             </div>
         `).join('');
     }
 
     async function lanzarRuta() {
-        if (!confirm("¿Lanzar ruta?")) return;
+        if (!confirm("¿Enviar esta ruta al despacho?")) return;
         await db.from('ruta_activa').delete().neq('id', -1);
         const paradas = borrador.map((p, i) => ({ id: i, nombre: p.nombre, lat: p.lat, lng: p.lng, orden: i+1, estado: 'Pendiente' }));
         await db.from('ruta_activa').insert(paradas);
@@ -181,16 +187,17 @@
     async function guardarNuevo() {
         const nombre = document.getElementById('n-nombre').value;
         const telefono = document.getElementById('n-telefono').value;
-        const lat_casa = document.getElementById('n-lat-casa').value || null;
-        const lng_casa = document.getElementById('n-lng-casa').value || null;
-        const lat_trabajo = document.getElementById('n-lat-trabajo').value || null;
-        const lng_trabajo = document.getElementById('n-lng-trabajo').value || null;
-        const lat_temporal = document.getElementById('n-lat-temporal').value || null;
-        const lng_temporal = document.getElementById('n-lng-temporal').value || null;
-
-        if (!nombre) return alert("El nombre es obligatorio");
-
-        const { error } = await db.from('clientes').insert([{ nombre, telefono, lat_casa, lng_casa, lat_trabajo, lng_trabajo, lat_temporal, lng_temporal }]);
+        const datos = {
+            nombre, telefono,
+            lat_casa: document.getElementById('n-lat-casa').value || null,
+            lng_casa: document.getElementById('n-lng-casa').value || null,
+            lat_trabajo: document.getElementById('n-lat-trabajo').value || null,
+            lng_trabajo: document.getElementById('n-lng-trabajo').value || null,
+            lat_temporal: document.getElementById('n-lat-temporal').value || null,
+            lng_temporal: document.getElementById('n-lng-temporal').value || null,
+        };
+        if (!nombre) return alert("Nombre obligatorio");
+        const { error } = await db.from('clientes').insert([datos]);
         if (error) alert("Error"); else { alert("Guardado"); location.reload(); }
     }
 
