@@ -2,159 +2,182 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>RapidPack Admin - Centro de Control</title>
+    <title>Admin RapidPack - Buscador de Clientes</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --rp-red: #ff3d00; --rp-black: #0b0b0b; --rp-grey: #1a1a1b; --rp-green: #00c853; }
-        body { margin: 0; background: var(--rp-black); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        body { margin: 0; background: var(--rp-black); color: white; font-family: 'Segoe UI', sans-serif; }
         
-        /* Header */
         header { padding: 15px 30px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rp-red); }
-        .btn-nav { background: var(--rp-grey); color: white; border: 1px solid #333; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-main { background: var(--rp-red); color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-
-        /* Contenedor Principal */
-        main { display: flex; flex: 1; padding: 20px; gap: 20px; overflow: hidden; }
-        .card { background: var(--rp-grey); border-radius: 12px; padding: 20px; border: 1px solid #333; }
         
-        /* Creador de Rutas */
-        .ruta-box { flex: 2; display: flex; flex-direction: column; gap: 15px; }
-        .input-group { display: flex; gap: 10px; }
-        select, input { background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; flex: 1; }
+        main { padding: 20px; max-width: 800px; margin: auto; }
+        .card { background: var(--rp-grey); border-radius: 12px; padding: 20px; border: 1px solid #333; margin-bottom: 20px; }
 
-        /* Modal Clientes (Landing) */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--rp-grey); width: 90%; max-width: 1000px; height: 80vh; border-radius: 15px; border: 1px solid var(--rp-red); display: flex; flex-direction: column; padding: 25px; }
-        .search-bar { width: 100%; padding: 15px; margin-bottom: 20px; font-size: 16px; box-sizing: border-box; }
-        .table-wrap { flex: 1; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; background: #000; color: var(--rp-red); position: sticky; top: 0; }
-        td { padding: 12px; border-bottom: 1px solid #333; font-size: 14px; }
+        /* BUSCADOR */
+        .search-box { width: 100%; padding: 15px; background: #222; border: 2px solid #444; color: white; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
+        .search-box:focus { border-color: var(--rp-red); outline: none; }
+        
+        /* RESULTADO DEL CLIENTE */
+        #cliente-seleccionado { display: none; margin-top: 20px; animation: fadeIn 0.3s; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-ubi { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 12px; }
+        .btn-casa { background: #3498db; }
+        .btn-trabajo { background: #9b59b6; }
+        .btn-temp { background: #f39c12; }
+        .btn-ubi:disabled { background: #444; cursor: not-allowed; opacity: 0.5; }
 
-        /* Items de Borrador */
-        .item-draft { background: #252526; padding: 12px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; border-left: 4px solid var(--rp-red); }
+        /* BORRADOR DE RUTA */
+        .item-draft { background: #252526; padding: 12px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); }
+        .btn-del { background: none; border: none; color: #ff5555; cursor: pointer; font-weight: bold; }
+
+        /* FORMULARIO NUEVO CLIENTE */
+        .f-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input[type="text"], input[type="number"] { background: #222; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; flex: 1; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <header>
-    <h2 style="color: var(--rp-red); margin:0;">RAPIDPACK LOGISTICS</h2>
-    <div style="display:flex; gap:10px;">
-        <button class="btn-nav" onclick="location.href='despacho.html'">🖥️ Monitor Radar</button>
-        <button class="btn-main" onclick="abrirClientes()">👥 Clientes</button>
-    </div>
+    <h2 style="color: var(--rp-red); margin:0;">RAPIDPACK ADMIN</h2>
+    <button style="background:var(--rp-grey); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;" onclick="location.href='despacho.html'">🖥️ Ir al Radar</button>
 </header>
 
 <main>
-    <div class="ruta-box card">
-        <h3>🚀 Lanzar Flota</h3>
-        <div class="input-group">
-            <select id="sel-cliente"><option>Cargando clientes...</option></select>
-            <select id="sel-ubi" style="max-width: 150px;">
-                <option value="casa">🏠 Casa</option>
-                <option value="trabajo">💼 Trabajo</option>
-                <option value="temporal">⏳ Temporal</option>
-            </select>
-            <button class="btn-main" onclick="agregarABorrador()">+ Añadir</button>
-        </div>
-        <div id="borrador" style="flex:1; overflow-y:auto;">
+    <div class="card">
+        <h3>🔍 Buscar Cliente (Nombre o RP)</h3>
+        <input type="text" id="buscador" class="search-box" placeholder="Escribe para buscar..." oninput="buscar()">
+        
+        <div id="cliente-seleccionado">
+            <h2 id="view-nombre" style="margin-bottom:5px; color:var(--rp-red);"></h2>
+            <p style="margin:0; font-size:12px; color:#aaa;">Selecciona el destino para la ruta:</p>
+            <div class="btn-group">
+                <button id="btn-casa" class="btn-ubi btn-casa" onclick="addParada('casa')">🏠 CASA</button>
+                <button id="btn-trabajo" class="btn-ubi btn-trabajo" onclick="addParada('trabajo')">💼 TRABAJO</button>
+                <button id="btn-temp" class="btn-ubi btn-temp" onclick="addParada('temporal')">⏳ TEMPORAL</button>
             </div>
-        <button class="btn-main" style="background: var(--rp-green); width: 100%; height: 50px;" onclick="lanzarRuta()">LANZAR A FLOTA AHORA</button>
+        </div>
+    </div>
+
+    <div class="card" id="card-borrador" style="display:none;">
+        <h3>📄 Ruta para enviar</h3>
+        <div id="lista-borrador"></div>
+        <button style="width:100%; background:var(--rp-green); border:none; color:black; padding:15px; font-weight:bold; border-radius:8px; margin-top:15px; cursor:pointer;" onclick="lanzarRuta()">🚀 LANZAR A FLOTA AHORA</button>
+    </div>
+
+    <div class="card">
+        <h4 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">➕ Registrar Nuevo Cliente</h4>
+        <div class="f-row"><input type="text" id="n-nombre" placeholder="Nombre completo"></div>
+        <p style="font-size:11px; color:var(--rp-red); margin:5px 0;">Coordenadas Casa (Lat, Lng):</p>
+        <div class="f-row">
+            <input type="number" step="any" id="n-lat-c" placeholder="Latitud">
+            <input type="number" step="any" id="n-lng-c" placeholder="Longitud">
+        </div>
+        <button onclick="guardarNuevo()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">GUARDAR EN BASE DE DATOS</button>
     </div>
 </main>
-
-<div id="modalClientes" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>Base de Datos de Clientes</h2>
-            <button class="btn-main" onclick="nuevoCliente()">+ Nuevo Cliente</button>
-        </div>
-        <input type="text" id="buscador" class="search-bar" placeholder="Buscar por nombre (Presiona ESC para salir)...">
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Nombre</th><th>📍 Casa</th><th>💼 Trabajo</th><th>⏳ Temp</th><th>Acción</th></tr>
-                </thead>
-                <tbody id="lista-clientes"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
 
 <script>
     const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
 
     let clientesRaw = [];
-    let borradorRuta = [];
+    let borrador = [];
+    let clienteActivo = null;
 
-    // --- FUNCIONES DEL MODAL ---
-    function abrirClientes() { document.getElementById('modalClientes').style.display = 'flex'; cargarClientes(); }
-    function cerrarClientes() { document.getElementById('modalClientes').style.display = 'none'; }
-
-    // Cerrar con ESC
-    window.addEventListener('keydown', (e) => { if(e.key === 'Escape') cerrarClientes(); });
-
-    async function cargarClientes() {
-        const { data } = await db.from('clientes').select('*').order('nombre');
+    // Cargar datos iniciales
+    async function init() {
+        const { data } = await db.from('clientes').select('*');
         clientesRaw = data || [];
-        renderizarTabla(clientesRaw);
-        
-        const sel = document.getElementById('sel-cliente');
-        sel.innerHTML = clientesRaw.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
     }
 
-    function renderizarTabla(lista) {
-        document.getElementById('lista-clientes').innerHTML = lista.map(c => `
-            <tr>
-                <td><b>${c.nombre}</b></td>
-                <td>${c.lat_casa ? '✅' : '❌'}</td>
-                <td>${c.lat_trabajo ? '✅' : '❌'}</td>
-                <td>${c.lat_temporal ? '✅' : '❌'}</td>
-                <td><button onclick="editar('${c.id}')">✏️</button></td>
-            </tr>
-        `).join('');
+    function buscar() {
+        const txt = document.getElementById('buscador').value.toLowerCase();
+        const display = document.getElementById('cliente-seleccionado');
+        
+        if (txt.length < 2) { display.style.display = 'none'; return; }
+
+        clienteActivo = clientesRaw.find(c => c.nombre.toLowerCase().includes(txt));
+
+        if (clienteActivo) {
+            display.style.display = 'block';
+            document.getElementById('view-nombre').innerText = clienteActivo.nombre;
+            
+            // Habilitar botones solo si tienen coordenadas
+            document.getElementById('btn-casa').disabled = !clienteActivo.lat_casa;
+            document.getElementById('btn-trabajo').disabled = !clienteActivo.lat_trabajo;
+            document.getElementById('btn-temp').disabled = !clienteActivo.lat_temporal;
+        } else {
+            display.style.display = 'none';
+        }
     }
 
-    // Buscador
-    document.getElementById('buscador').addEventListener('input', (e) => {
-        const bus = e.target.value.toLowerCase();
-        const filtrados = clientesRaw.filter(c => c.nombre.toLowerCase().includes(bus));
-        renderizarTabla(filtrados);
-    });
+    function addParada(tipo) {
+        if (!clienteActivo) return;
+        const lat = clienteActivo[`lat_${tipo}`];
+        const lng = clienteActivo[`lng_${tipo}`];
 
-    // --- GESTIÓN DE RUTA ---
-    function agregarABorrador() {
-        const id = document.getElementById('sel-cliente').value;
-        const ubi = document.getElementById('sel-ubi').value;
-        const c = clientesRaw.find(x => x.id === id);
+        borrador.push({ nombre: `${clienteActivo.nombre} (${tipo.toUpperCase()})`, lat, lng });
         
-        let lat = c[`lat_${ubi}`], lng = c[`lng_${ubi}`];
-        if(!lat) return alert("Este cliente no tiene esa dirección guardada");
-
-        borradorRuta.push({ nombre: `${c.nombre} (${ubi})`, lat, lng });
+        document.getElementById('buscador').value = '';
+        document.getElementById('cliente-seleccionado').style.display = 'none';
         actualizarBorradorUI();
     }
 
     function actualizarBorradorUI() {
-        document.getElementById('borrador').innerHTML = borradorRuta.map((r, i) => `
+        const card = document.getElementById('card-borrador');
+        const lista = document.getElementById('lista-borrador');
+        
+        card.style.display = borrador.length > 0 ? 'block' : 'none';
+        lista.innerHTML = borrador.map((item, i) => `
             <div class="item-draft">
-                <span>${i+1}. ${r.nombre}</span>
-                <button onclick="borradorRuta.splice(${i},1); actualizarBorradorUI()">🗑️</button>
+                <span><b>${i+1}.</b> ${item.nombre}</span>
+                <button class="btn-del" onclick="borrador.splice(${i},1); actualizarBorradorUI()">X</button>
             </div>
         `).join('');
     }
 
     async function lanzarRuta() {
+        if (!confirm("¿Enviar esta ruta al monitor de despacho?")) return;
+        
+        // Limpiar ruta activa vieja
         await db.from('ruta_activa').delete().neq('id', -1);
-        const paradas = borradorRuta.map((r, i) => ({
-            id: i, nombre: r.nombre, lat: r.lat, lng: r.lng, orden: i+1, estado: 'Pendiente'
+
+        const paradas = borrador.map((p, i) => ({
+            id: i, nombre: p.nombre, lat: p.lat, lng: p.lng, orden: i+1, estado: 'Pendiente'
         }));
+
         await db.from('ruta_activa').insert(paradas);
-        alert("¡Ruta lanzada!");
+        alert("¡Ruta lanzada a la flota!");
         location.href = 'despacho.html';
     }
 
-    cargarClientes();
+    async function guardarNuevo() {
+        const nombre = document.getElementById('n-nombre').value;
+        const lat_casa = document.getElementById('n-lat-c').value;
+        const lng_casa = document.getElementById('n-lng-c').value;
+
+        if (!nombre || !lat_casa) return alert("Nombre y coordenadas son obligatorios");
+
+        const { error } = await db.from('clientes').insert([{ nombre, lat_casa, lng_casa }]);
+        
+        if (error) {
+            alert("Error al guardar: " + error.message);
+        } else {
+            alert("Cliente guardado con éxito");
+            location.reload(); // Recargar para que aparezca en el buscador
+        }
+    }
+
+    // Cerrar buscador con ESC
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.getElementById('buscador').value = '';
+            document.getElementById('cliente-seleccionado').style.display = 'none';
+        }
+    });
+
+    init();
 </script>
 </body>
 </html>
