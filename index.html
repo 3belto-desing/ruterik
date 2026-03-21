@@ -2,18 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>RapidPack Admin - Despacho Pro 🚚</title>
+    <title>RapidPack Admin - Centro de Despacho 🚚</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --rp-red: #ff3d00; --rp-black: #0b0b0b; --rp-grey: #1a1a1b; --rp-green: #00c853; }
         body { margin: 0; background: var(--rp-black); color: white; font-family: 'Segoe UI', sans-serif; }
         header { padding: 15px 30px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rp-red); }
-        main { padding: 20px; max-width: 1100px; margin: auto; display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+        main { padding: 20px; max-width: 1200px; margin: auto; display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .card { background: var(--rp-grey); border-radius: 12px; padding: 20px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
         /* BUSCADOR */
         .search-box { width: 100%; padding: 15px; background: #222; border: 2px solid #444; color: white; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
-        #cliente-seleccionado { display: none; margin-top: 20px; padding: 15px; background: #222; border-radius: 10px; border: 1px dashed #444; }
+        #cliente-seleccionado { display: none; margin-top: 15px; padding: 15px; background: #222; border-radius: 10px; border: 1px dashed #444; }
         
         .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
         .btn-ubi { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 10px; text-transform: uppercase; }
@@ -22,8 +22,12 @@
         .btn-temp { background: #f39c12; }
         .btn-ubi:disabled { background: #444; cursor: not-allowed; opacity: 0.2; }
 
-        /* BOTONES REPORTES */
-        .btn-wa-group { width: 100%; background: #25d366; color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        /* CUADRO DE TEXTO GENERADO */
+        #reporte-texto { 
+            width: 100%; height: 150px; background: #000; color: var(--rp-green); 
+            border: 1px solid #444; border-radius: 8px; padding: 10px; 
+            font-family: monospace; font-size: 13px; resize: none; margin-top: 10px;
+        }
 
         /* FORMULARIO */
         label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; }
@@ -57,12 +61,12 @@
         </div>
 
         <div id="card-borrador" style="display:none; margin-top:20px; border-top:1px solid #333; padding-top:20px;">
-            <h3 style="margin:0 0 10px 0;">📄 Ruta del Día</h3>
-            <div id="lista-borrador" style="max-height: 250px; overflow-y: auto; margin-bottom:15px;"></div>
-            
-            <button class="btn-wa-group" onclick="generarReporteEmpresa()">
-                📱 GENERAR MENSAJE PARA EL CHAT
-            </button>
+            <h3 style="margin:0 0 10px 0;">📄 Texto para el Grupo</h3>
+            <textarea id="reporte-texto" readonly></textarea>
+            <button style="width:100%; background:#444; color:white; border:none; padding:8px; border-radius:5px; margin-top:5px; cursor:pointer; font-size:11px;" onclick="copiarReporte()">📋 COPIAR TEXTO</button>
+
+            <h3 style="margin:20px 0 10px 0;">📦 Lista de Ruta</h3>
+            <div id="lista-borrador" style="max-height: 200px; overflow-y: auto; margin-bottom:15px;"></div>
             
             <button style="width:100%; background:var(--rp-green); border:none; padding:15px; font-weight:bold; border-radius:8px; cursor:pointer; font-size: 16px;" onclick="lanzarRuta()">
                 🚀 LANZAR A MONITOR DESPACHO
@@ -71,25 +75,34 @@
     </div>
 
     <div class="card">
-        <h3 style="margin:0 0 15px 0; color:#aaa;">➕ Registrar / Actualizar</h3>
+        <h3 style="margin:0 0 15px 0; color:#aaa;">➕ Registro / Actualización</h3>
         <div class="f-row">
             <div style="flex:2"><label>Nombre del Cliente</label><input type="text" id="n-nombre"></div>
-            <div style="flex:1"><label>WhatsApp</label><input type="tel" id="n-telefono" placeholder="8091234567"></div>
+            <div style="flex:1"><label>Código RP (Opcional)</label><input type="text" id="n-codigo"></div>
         </div>
 
         <div class="form-section" style="border-left-color: #3498db;">
             <label>🏠 1. CASA (lat / lng)</label>
-            <div class="f-row"><input type="number" step="any" id="n-lat" placeholder="Latitud"><input type="number" step="any" id="n-lng" placeholder="Longitud"></div>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng" placeholder="Longitud">
+            </div>
         </div>
 
         <div class="form-section" style="border-left-color: #9b59b6;">
             <label>💼 2. TRABAJO (lat_2 / lng_2)</label>
-            <div class="f-row"><input type="number" step="any" id="n-lat-2" placeholder="Latitud"><input type="number" step="any" id="n-lng-2" placeholder="Longitud"></div>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat-2" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng-2" placeholder="Longitud">
+            </div>
         </div>
 
         <div class="form-section" style="border-left-color: #f39c12;">
             <label>⏳ 3. TEMPORAL (lat_temp / lng_temp)</label>
-            <div class="f-row"><input type="number" step="any" id="n-lat-temp" placeholder="Latitud"><input type="number" step="any" id="n-lng-temp" placeholder="Longitud"></div>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat-temp" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng-temp" placeholder="Longitud">
+            </div>
         </div>
 
         <button onclick="guardarNuevo()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer;">💾 GUARDAR EN SISTEMA</button>
@@ -124,8 +137,6 @@
         if (clienteActivo) {
             display.style.display = 'block';
             document.getElementById('view-nombre').innerText = clienteActivo.nombre;
-            
-            // CORRECCIÓN: Usar lat (Casa), lat_2 (Trabajo), lat_temp (Temporal)
             document.getElementById('btn-casa').disabled = !clienteActivo.lat;
             document.getElementById('btn-trabajo').disabled = !clienteActivo.lat_2;
             document.getElementById('btn-temp').disabled = !clienteActivo.lat_temp;
@@ -145,38 +156,41 @@
     }
 
     function actualizarBorradorUI() {
-        document.getElementById('card-borrador').style.display = borrador.length > 0 ? 'block' : 'none';
-        document.getElementById('lista-borrador').innerHTML = borrador.map((item, i) => `
+        const card = document.getElementById('card-borrador');
+        const lista = document.getElementById('lista-borrador');
+        const txtArea = document.getElementById('reporte-texto');
+        
+        card.style.display = borrador.length > 0 ? 'block' : 'none';
+        
+        // 1. Renderizar Lista visual
+        lista.innerHTML = borrador.map((item, i) => `
             <div class="item-draft">
                 <span><b>${i+1}.</b> ${item.nombre}</span>
                 <button style="background:none; border:none; color:#ff5555; cursor:pointer;" onclick="borrador.splice(${i},1); actualizarBorradorUI()">✕</button>
             </div>
         `).join('');
+
+        // 2. Generar Texto Llano
+        let texto = `${getSaludo()} equipo, ruta para hoy:\n\n`;
+        borrador.forEach((p, i) => {
+            texto += `${i + 1}. ${p.nombre}\n`;
+        });
+        txtArea.value = texto;
     }
 
-    function generarReporteEmpresa() {
-        if (borrador.length === 0) return;
-        const saludo = getSaludo();
-        
-        // FORMATO EXACTO SOLICITADO
-        let msg = `${saludo} equipo, ruta para hoy:\n\n`;
-        borrador.forEach((p, i) => { 
-            msg += `${i + 1}. ${p.nombre}\n`; 
-        });
-
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    function copiarReporte() {
+        const copyText = document.getElementById("reporte-texto");
+        copyText.select();
+        document.execCommand("copy");
+        alert("¡Texto copiado!");
     }
 
     async function lanzarRuta() {
-        if (!confirm("¿Enviar esta ruta al despacho?")) return;
+        if (!confirm("¿Lanzar esta ruta al monitor?")) return;
         await db.from('ruta_activa').delete().neq('id', -1);
         const paradas = borrador.map((p, i) => ({ 
-            id: i, 
-            nombre: `${p.nombre} (${p.ubi})`, 
-            lat: p.lat, 
-            lng: p.lng, 
-            orden: i+1, 
-            estado: 'Pendiente' 
+            id: i, nombre: `${p.nombre} (${p.ubi})`, 
+            lat: p.lat, lng: p.lng, orden: i+1, estado: 'Pendiente' 
         }));
         await db.from('ruta_activa').insert(paradas);
         location.href = 'despacho.html';
@@ -186,7 +200,7 @@
         const nombre = document.getElementById('n-nombre').value;
         const datos = {
             nombre,
-            telefono: document.getElementById('n-telefono').value,
+            codigo_rp: document.getElementById('n-codigo').value,
             lat: document.getElementById('n-lat').value || null,
             lng: document.getElementById('n-lng').value || null,
             lat_2: document.getElementById('n-lat-2').value || null,
