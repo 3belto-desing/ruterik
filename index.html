@@ -7,38 +7,28 @@
     <style>
         :root {
             --rp-red: #ff3d00; --rp-green: #00c853;
-            /* Modo Oscuro */
             --bg-body: #0b0b0b; --bg-card: #1a1a1b; --bg-input: #111;
             --bg-header: #000; --text-main: #ffffff; --text-muted: #888888; --border: #333333;
         }
-
         body.light-mode {
             --bg-body: #f4f4f9; --bg-card: #ffffff; --bg-input: #ffffff;
             --bg-header: #ffffff; --text-main: #1a1a1b; --text-muted: #666666; --border: #dddddd;
         }
-
         body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
-        header { padding: 15px 30px; background: var(--bg-header); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rp-red); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        
+        header { padding: 15px 30px; background: var(--bg-header); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rp-red); }
         main { padding: 20px; max-width: 1200px; margin: auto; display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
         .card { background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); position: relative; }
-
-        .theme-toggle { background: var(--border); border: none; color: var(--text-main); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; }
-
+        .theme-toggle { background: var(--border); border: none; color: var(--text-main); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 13px; }
         .search-box { width: 100%; padding: 15px; background: var(--bg-input); border: 2px solid var(--border); color: var(--text-main); border-radius: 8px; font-size: 18px; box-sizing: border-box; }
         #cliente-seleccionado { display: none; margin-top: 15px; padding: 15px; background: var(--bg-input); border-radius: 10px; border: 1px dashed var(--border); position: relative; }
-        
         .btn-edit { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; color: #f39c12; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
         .btn-ubi { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 10px; text-transform: uppercase; }
         .btn-casa { background: #3498db; } .btn-trabajo { background: #9b59b6; } .btn-temp { background: #f39c12; }
-        .btn-ubi:disabled { background: #ccc; opacity: 0.3; color: #666; }
-
-        #reporte-texto { width: 100%; height: 120px; background: #000; color: var(--rp-green); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: monospace; resize: none; margin-top: 10px; font-size: 14px; }
+        .btn-ubi:disabled { background: #ccc; opacity: 0.3; }
+        #reporte-texto { width: 100%; height: 120px; background: #000; color: var(--rp-green); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: monospace; resize: none; margin-top: 10px; }
         .light-mode #reporte-texto { background: #f0f0f0; color: #008137; }
-
-        .item-draft { background: var(--bg-input); padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); border: 1px solid var(--border); }
-
+        .item-draft { background: var(--bg-input); padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); }
         label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; font-weight: bold; }
         .f-row { display: flex; gap: 8px; margin-bottom: 8px; }
         input { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; flex: 1; font-size: 13px; }
@@ -46,7 +36,6 @@
     </style>
 </head>
 <body>
-
 <header>
     <h2 style="color: var(--rp-red); margin:0;">RAPIDPACK ADMIN</h2>
     <div style="display:flex; gap:10px;">
@@ -54,29 +43,26 @@
         <button style="background:var(--rp-red); color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="location.href='despacho.html'">🖥️ MONITOR</button>
     </div>
 </header>
-
 <main>
     <div class="card">
         <h3>🔍 Buscar Cliente</h3>
         <input type="text" id="buscador" class="search-box" placeholder="Nombre..." oninput="buscar()">
         <div id="cliente-seleccionado">
-            <button class="btn-edit" title="Editar" onclick="cargarEdicion()">✏️</button>
-            <h2 id="view-nombre" style="margin:0; font-size:18px; padding-right:30px;"></h2>
+            <button class="btn-edit" onclick="cargarEdicion()">✏️</button>
+            <h2 id="view-nombre" style="margin:0; font-size:18px;"></h2>
             <div class="btn-group">
                 <button id="btn-casa" class="btn-ubi btn-casa" onclick="addParada('CASA')">🏠 CASA</button>
                 <button id="btn-trabajo" class="btn-ubi btn-trabajo" onclick="addParada('TRABAJO')">💼 TRABAJO</button>
                 <button id="btn-temp" class="btn-ubi btn-temp" onclick="addParada('TEMPORAL')">⏳ TEMP</button>
             </div>
         </div>
-
         <div id="card-borrador" style="display:none; margin-top:20px; border-top:1px solid var(--border); padding-top:20px;">
             <h3>📄 Texto de Ruta</h3>
             <textarea id="reporte-texto" readonly></textarea>
             <div id="lista-borrador" style="margin-top:15px; max-height: 200px; overflow-y: auto;"></div>
-            <button style="width:100%; background:var(--rp-green); border:none; padding:15px; font-weight:bold; border-radius:8px; cursor:pointer; color:black;" onclick="lanzarRuta()">🚀 LANZAR RUTA</button>
+            <button id="btn-lanzar" style="width:100%; background:var(--rp-green); border:none; padding:15px; font-weight:bold; border-radius:8px; cursor:pointer; color:black;" onclick="lanzarRuta()">🚀 LANZAR RUTA</button>
         </div>
     </div>
-
     <div class="card">
         <h3 id="form-titulo">➕ Registro de Cliente</h3>
         <input type="hidden" id="edit-id">
@@ -84,16 +70,15 @@
             <div style="flex:2"><label>Nombre</label><input type="text" id="n-nombre"></div>
             <div style="flex:1"><label>Código RP</label><input type="text" id="n-codigo"></div>
         </div>
-        <div class="form-section"><label>🏠 1. CASA (lat/lng)</label><div class="f-row"><input type="number" step="any" id="n-lat"><input type="number" step="any" id="n-lng"></div></div>
-        <div class="form-section"><label>💼 2. TRABAJO (lat_2/lng_2)</label><div class="f-row"><input type="number" step="any" id="n-lat-2"><input type="number" step="any" id="n-lng-2"></div></div>
-        <div class="form-section"><label>⏳ 3. TEMPORAL (lat_temp/lng_temp)</label><div class="f-row"><input type="number" step="any" id="n-lat-temp"><input type="number" step="any" id="n-lng-temp"></div></div>
+        <div class="form-section"><label>🏠 CASA</label><div class="f-row"><input type="number" step="any" id="n-lat"><input type="number" step="any" id="n-lng"></div></div>
+        <div class="form-section"><label>💼 TRABAJO</label><div class="f-row"><input type="number" step="any" id="n-lat-2"><input type="number" step="any" id="n-lng-2"></div></div>
+        <div class="form-section"><label>⏳ TEMP</label><div class="f-row"><input type="number" step="any" id="n-lat-temp"><input type="number" step="any" id="n-lng-temp"></div></div>
         <div style="display:flex; gap:10px;">
             <button id="btn-save" onclick="guardarCliente()" style="flex:2; background:var(--rp-red); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer;">💾 GUARDAR</button>
-            <button id="btn-cancel" onclick="cancelarEdicion()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; display:none;">X</button>
+            <button id="btn-cancel" onclick="location.reload()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; display:none;">X</button>
         </div>
     </div>
 </main>
-
 <script>
     const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
     let clientesRaw = []; let borrador = []; let clienteActivo = null;
@@ -105,15 +90,8 @@
     if(localStorage.getItem('rp-theme') === 'light') document.body.classList.add('light-mode');
 
     async function init() { const { data } = await db.from('clientes').select('*'); clientesRaw = data || []; }
+    function getSaludo() { const h = new Date().getHours(); return h < 12 ? "Buenos días" : h < 18 ? "Buenas tardes" : "Buenas noches"; }
     
-    // --- FUNCIÓN DEL SALUDO ---
-    function getSaludo() {
-        const h = new Date().getHours();
-        if (h < 12) return "Buenos días";
-        if (h < 18) return "Buenas tardes";
-        return "Buenas noches";
-    }
-
     function buscar() {
         const txt = document.getElementById('buscador').value.toLowerCase();
         const display = document.getElementById('cliente-seleccionado');
@@ -125,36 +103,6 @@
             document.getElementById('btn-trabajo').disabled = !clienteActivo.lat_2;
             document.getElementById('btn-temp').disabled = !clienteActivo.lat_temp;
         } else { display.style.display = 'none'; }
-    }
-
-    function cargarEdicion() {
-        if (!clienteActivo) return;
-        document.getElementById('form-titulo').innerText = "✏️ Editando: " + clienteActivo.nombre;
-        document.getElementById('edit-id').value = clienteActivo.id;
-        document.getElementById('n-nombre').value = clienteActivo.nombre;
-        document.getElementById('n-codigo').value = clienteActivo.codigo_rp || '';
-        document.getElementById('n-lat').value = clienteActivo.lat || ''; document.getElementById('n-lng').value = clienteActivo.lng || '';
-        document.getElementById('n-lat-2').value = clienteActivo.lat_2 || ''; document.getElementById('n-lng-2').value = clienteActivo.lng_2 || '';
-        document.getElementById('n-lat-temp').value = clienteActivo.lat_temp || ''; document.getElementById('n-lng-temp').value = clienteActivo.lng_temp || '';
-        document.getElementById('btn-save').innerText = "🔄 ACTUALIZAR";
-        document.getElementById('btn-cancel').style.display = "block";
-    }
-
-    function cancelarEdicion() { location.reload(); }
-
-    async function guardarCliente() {
-        const idEdit = document.getElementById('edit-id').value;
-        const nombre = document.getElementById('n-nombre').value;
-        if (!nombre) return alert("Nombre obligatorio");
-        const datos = { 
-            nombre, codigo_rp: document.getElementById('n-codigo').value, 
-            lat: document.getElementById('n-lat').value || null, lng: document.getElementById('n-lng').value || null, 
-            lat_2: document.getElementById('n-lat-2').value || null, lng_2: document.getElementById('n-lng-2').value || null, 
-            lat_temp: document.getElementById('n-lat-temp').value || null, lng_temp: document.getElementById('n-lng-temp').value || null 
-        };
-        if (idEdit) await db.from('clientes').update(datos).eq('id', idEdit);
-        else await db.from('clientes').insert([datos]);
-        location.reload();
     }
 
     function addParada(tipo) {
@@ -169,20 +117,66 @@
     function actualizarBorradorUI() {
         document.getElementById('card-borrador').style.display = borrador.length > 0 ? 'block' : 'none';
         document.getElementById('lista-borrador').innerHTML = borrador.map((item, i) => `<div class="item-draft"><span><b>${i+1}.</b> ${item.nombre}</span><button style="background:none; border:none; color:#ff5555;" onclick="borrador.splice(${i},1); actualizarBorradorUI()">✕</button></div>`).join('');
-        
-        // --- TEXTO EXACTO QUE PEDISTE ---
         let texto = `${getSaludo()}, ruta para hoy:\n\n`;
         borrador.forEach((p, i) => { texto += `${i + 1}. ${p.nombre}\n`; });
         document.getElementById('reporte-texto').value = texto;
     }
 
     async function lanzarRuta() {
-        if (!confirm("¿Lanzar ruta?")) return;
-        await db.from('ruta_activa').delete().not('id', 'is', null);
-        const paradas = borrador.map((p, i) => ({ nombre: `${p.nombre} (${p.ubi})`, lat: p.lat, lng: p.lng, orden: i+1, estado: 'Pendiente' }));
-        await db.from('ruta_activa').insert(paradas);
-        location.href = 'despacho.html';
+        const btn = document.getElementById('btn-lanzar');
+        btn.innerText = "PROCESANDO..."; btn.disabled = true;
+        
+        try {
+            // 1. Limpiar tabla (usando filtro de seguridad compatible con UUID)
+            await db.from('ruta_activa').delete().not('nombre', 'is', null);
+
+            // 2. Preparar datos (SIN ID MANUAL para evitar el error de UUID)
+            const paradas = borrador.map((p, i) => ({ 
+                nombre: `${p.nombre} (${p.ubi})`, 
+                lat: p.lat, 
+                lng: p.lng, 
+                orden: i + 1, 
+                estado: 'Pendiente' 
+            }));
+
+            // 3. Insertar
+            const { error } = await db.from('ruta_activa').insert(paradas);
+            
+            if (error) throw error;
+            
+            alert("🚀 ¡Ruta cargada con éxito!");
+            window.location.href = 'despacho.html';
+        } catch (err) {
+            alert("Error: " + err.message);
+            btn.innerText = "🚀 LANZAR RUTA"; btn.disabled = false;
+        }
     }
+
+    async function guardarCliente() {
+        const idEdit = document.getElementById('edit-id').value;
+        const datos = { 
+            nombre: document.getElementById('n-nombre').value, 
+            codigo_rp: document.getElementById('n-codigo').value, 
+            lat: document.getElementById('n-lat').value || null, lng: document.getElementById('n-lng').value || null, 
+            lat_2: document.getElementById('n-lat-2').value || null, lng_2: document.getElementById('n-lng-2').value || null, 
+            lat_temp: document.getElementById('n-lat-temp').value || null, lng_temp: document.getElementById('n-lng-temp').value || null 
+        };
+        if (idEdit) await db.from('clientes').update(datos).eq('id', idEdit);
+        else await db.from('clientes').insert([datos]);
+        location.reload();
+    }
+
+    function cargarEdicion() {
+        document.getElementById('edit-id').value = clienteActivo.id;
+        document.getElementById('n-nombre').value = clienteActivo.nombre;
+        document.getElementById('n-codigo').value = clienteActivo.codigo_rp || '';
+        document.getElementById('n-lat').value = clienteActivo.lat; document.getElementById('n-lng').value = clienteActivo.lng;
+        document.getElementById('n-lat-2').value = clienteActivo.lat_2; document.getElementById('n-lng-2').value = clienteActivo.lng_2;
+        document.getElementById('n-lat-temp').value = clienteActivo.lat_temp; document.getElementById('n-lat-temp').value = clienteActivo.lng_temp;
+        document.getElementById('btn-save').innerText = "🔄 ACTUALIZAR";
+        document.getElementById('btn-cancel').style.display = "block";
+    }
+
     init();
 </script>
 </body>
