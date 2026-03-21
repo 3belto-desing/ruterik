@@ -2,176 +2,218 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RapidPack Radar Pro 🛰️</title>
-    
+    <title>RapidPack Admin - Centro de Despacho 🚚</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
-        /* Paleta de Colores RapidPack */
-        :root {
-            --rp-red: #ff3d00;
-            --rp-black: #0b0b0b;
-            --rp-grey: #1a1a1b;
-            --rp-green: #00c853;
-        }
+        :root { --rp-red: #ff3d00; --rp-black: #0b0b0b; --rp-grey: #1a1a1b; --rp-green: #00c853; }
+        body { margin: 0; background: var(--rp-black); color: white; font-family: 'Segoe UI', sans-serif; }
+        header { padding: 15px 30px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rp-red); }
+        main { padding: 20px; max-width: 1200px; margin: auto; display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+        .card { background: var(--rp-grey); border-radius: 12px; padding: 20px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: var(--rp-black); display: flex; }
+        /* BUSCADOR */
+        .search-box { width: 100%; padding: 15px; background: #222; border: 2px solid #444; color: white; border-radius: 8px; font-size: 18px; box-sizing: border-box; }
+        #cliente-seleccionado { display: none; margin-top: 15px; padding: 15px; background: #222; border-radius: 10px; border: 1px dashed #444; }
         
-        /* Panel Lateral (Sidebar) */
-        #sidebar { 
-            width: 320px; height: 100%; background: var(--rp-grey); color: white; 
-            border-right: 2px solid #333; display: flex; flex-direction: column; z-index: 2000;
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .btn-ubi { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 10px; text-transform: uppercase; }
+        .btn-casa { background: #3498db; }
+        .btn-trabajo { background: #9b59b6; }
+        .btn-temp { background: #f39c12; }
+        .btn-ubi:disabled { background: #444; cursor: not-allowed; opacity: 0.2; }
+
+        /* CUADRO DE TEXTO GENERADO */
+        #reporte-texto { 
+            width: 100%; height: 150px; background: #000; color: var(--rp-green); 
+            border: 1px solid #444; border-radius: 8px; padding: 10px; 
+            font-family: monospace; font-size: 13px; resize: none; margin-top: 10px;
         }
-        .header { padding: 20px; background: #000; border-bottom: 3px solid var(--rp-red); }
-        .route-list { flex: 1; overflow-y: auto; padding: 15px; }
 
-        /* Contenedor del Mapa */
-        #map-container { flex: 1; position: relative; height: 100%; background: #222; }
-        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        /* FORMULARIO */
+        label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; }
+        .f-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        input { background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 6px; flex: 1; font-size: 13px; }
+        .form-section { padding: 10px; background: #222; border-radius: 8px; border-left: 3px solid #444; margin-bottom: 10px; }
 
-        /* Tarjetas de Clientes en la lista */
-        .client-card { 
-            background: #222; margin-bottom: 12px; padding: 15px; border-radius: 10px;
-            border-left: 5px solid #555; display: flex; justify-content: space-between; align-items: center;
-            transition: 0.3s;
-        }
-        .completed { border-left-color: var(--rp-green) !important; opacity: 0.6; }
-        .check { width: 22px; height: 22px; border: 2px solid #555; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        .completed .check { background: var(--rp-green); border-color: var(--rp-green); color: black; font-weight: bold; }
-        .completed .check::after { content: '✓'; }
-
-        .dist { font-size: 11px; color: var(--rp-red); display: block; margin-top: 4px; font-weight: bold; }
-        .tag-live { font-size: 10px; background: var(--rp-green); color: black; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        /* BORRADOR */
+        .item-draft { background: #252526; padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <div class="header">
-            <h2 style="margin:0; color:var(--rp-red); font-size: 20px; letter-spacing: 1px;">RAPIDPACK</h2>
-            <div id="status" style="font-size: 12px; color: #aaa; margin-top:5px;">🛰️ Buscando señal de flota...</div>
-        </div>
-        <div class="route-list" id="lista">
+<header>
+    <h2 style="color: var(--rp-red); margin:0;">RAPIDPACK ADMIN</h2>
+    <button style="background:var(--rp-grey); color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="location.href='despacho.html'">🖥️ MONITOR RADAR</button>
+</header>
+
+<main>
+    <div class="card">
+        <h3 style="margin:0 0 15px 0; color:var(--rp-red);">🔍 Buscar Cliente</h3>
+        <input type="text" id="buscador" class="search-box" placeholder="Escribe nombre..." oninput="buscar()">
+        
+        <div id="cliente-seleccionado">
+            <h2 id="view-nombre" style="margin:0; font-size:18px; color:white;"></h2>
+            <div class="btn-group">
+                <button id="btn-casa" class="btn-ubi btn-casa" onclick="addParada('CASA')">🏠 CASA</button>
+                <button id="btn-trabajo" class="btn-ubi btn-trabajo" onclick="addParada('TRABAJO')">💼 TRABAJO</button>
+                <button id="btn-temp" class="btn-ubi btn-temp" onclick="addParada('TEMPORAL')">⏳ TEMPORAL</button>
             </div>
+        </div>
+
+        <div id="card-borrador" style="display:none; margin-top:20px; border-top:1px solid #333; padding-top:20px;">
+            <h3 style="margin:0 0 10px 0;">📄 Texto para el Grupo</h3>
+            <textarea id="reporte-texto" readonly></textarea>
+            <button style="width:100%; background:#444; color:white; border:none; padding:8px; border-radius:5px; margin-top:5px; cursor:pointer; font-size:11px;" onclick="copiarReporte()">📋 COPIAR TEXTO</button>
+
+            <h3 style="margin:20px 0 10px 0;">📦 Lista de Ruta</h3>
+            <div id="lista-borrador" style="max-height: 200px; overflow-y: auto; margin-bottom:15px;"></div>
+            
+            <button style="width:100%; background:var(--rp-green); border:none; padding:15px; font-weight:bold; border-radius:8px; cursor:pointer; font-size: 16px;" onclick="lanzarRuta()">
+                🚀 LANZAR A MONITOR DESPACHO
+            </button>
+        </div>
     </div>
 
-    <div id="map-container">
-        <div id="map"></div>
+    <div class="card">
+        <h3 style="margin:0 0 15px 0; color:#aaa;">➕ Registro / Actualización</h3>
+        <div class="f-row">
+            <div style="flex:2"><label>Nombre del Cliente</label><input type="text" id="n-nombre"></div>
+            <div style="flex:1"><label>Código RP (Opcional)</label><input type="text" id="n-codigo"></div>
+        </div>
+
+        <div class="form-section" style="border-left-color: #3498db;">
+            <label>🏠 1. CASA (lat / lng)</label>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng" placeholder="Longitud">
+            </div>
+        </div>
+
+        <div class="form-section" style="border-left-color: #9b59b6;">
+            <label>💼 2. TRABAJO (lat_2 / lng_2)</label>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat-2" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng-2" placeholder="Longitud">
+            </div>
+        </div>
+
+        <div class="form-section" style="border-left-color: #f39c12;">
+            <label>⏳ 3. TEMPORAL (lat_temp / lng_temp)</label>
+            <div class="f-row">
+                <input type="number" step="any" id="n-lat-temp" placeholder="Latitud">
+                <input type="number" step="any" id="n-lng-temp" placeholder="Longitud">
+            </div>
+        </div>
+
+        <button onclick="guardarNuevo()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer;">💾 GUARDAR EN SISTEMA</button>
     </div>
+</main>
 
 <script>
-    // 1. Conexión a Supabase
     const db = supabase.createClient("https://trdfieobkewwjhzxwpxc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyZGZpZW9ia2V3d2poenh3cHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4ODYyMTAsImV4cCI6MjA4ODQ2MjIxMH0.aU6dMbELmJRAVmdGVqkHwy60Mth8jaGkeaHVjrGqRZk");
 
-    // 2. Configurar el Mapa (Centrado en SDE)
-    var map = L.map('map', { zoomControl: false }).setView([18.4877, -69.8561], 14);
-    
-    // Capa de mapa oscuro pro
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+    let clientesRaw = [];
+    let borrador = [];
+    let clienteActivo = null;
 
-    // Icono del camión rojo
-    var iconoCamion = L.icon({ 
-        iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048329.png', 
-        iconSize: [45, 45],
-        iconAnchor: [22, 22]
-    });
-    
-    var markerChofer = L.marker([0, 0], { icon: iconoCamion }).addTo(map);
-    let clientes = [];
+    async function init() {
+        const { data } = await db.from('clientes').select('*');
+        clientesRaw = data || [];
+    }
 
-    // 3. Cargar la Ruta Lanzada
-    async function cargarDatos() {
-        const { data } = await db.from('ruta_activa').select('*').order('orden', { ascending: true });
-        clientes = data || [];
+    function getSaludo() {
+        const h = new Date().getHours();
+        if (h < 12) return "Buenos días";
+        if (h < 18) return "Buenas tardes";
+        return "Buenas noches";
+    }
+
+    function buscar() {
+        const txt = document.getElementById('buscador').value.toLowerCase();
+        const display = document.getElementById('cliente-seleccionado');
+        if (txt.length < 2) { display.style.display = 'none'; return; }
         
-        const listaDiv = document.getElementById('lista');
-        listaDiv.innerHTML = '';
+        clienteActivo = clientesRaw.find(c => c.nombre && c.nombre.toLowerCase().includes(txt));
+        if (clienteActivo) {
+            display.style.display = 'block';
+            document.getElementById('view-nombre').innerText = clienteActivo.nombre;
+            document.getElementById('btn-casa').disabled = !clienteActivo.lat;
+            document.getElementById('btn-trabajo').disabled = !clienteActivo.lat_2;
+            document.getElementById('btn-temp').disabled = !clienteActivo.lat_temp;
+        } else { display.style.display = 'none'; }
+    }
+
+    function addParada(tipo) {
+        let lat, lng;
+        if (tipo === 'CASA') { lat = clienteActivo.lat; lng = clienteActivo.lng; }
+        else if (tipo === 'TRABAJO') { lat = clienteActivo.lat_2; lng = clienteActivo.lng_2; }
+        else { lat = clienteActivo.lat_temp; lng = clienteActivo.lng_temp; }
+
+        borrador.push({ nombre: clienteActivo.nombre, ubi: tipo, lat, lng });
+        document.getElementById('buscador').value = '';
+        document.getElementById('cliente-seleccionado').style.display = 'none';
+        actualizarBorradorUI();
+    }
+
+    function actualizarBorradorUI() {
+        const card = document.getElementById('card-borrador');
+        const lista = document.getElementById('lista-borrador');
+        const txtArea = document.getElementById('reporte-texto');
         
-        clientes.forEach(c => {
-            const isDone = c.estado === 'Entregado';
-            listaDiv.innerHTML += `
-                <div class="client-card ${isDone ? 'completed' : ''}" id="card-${c.id}">
-                    <div>
-                        <b style="font-size:14px; color:white;">${c.orden}. ${c.nombre}</b>
-                        <span class="dist" id="d-${c.id}">${isDone ? 'Entregado' : 'Esperando GPS...'}</span>
-                    </div>
-                    <div class="check"></div>
-                </div>
-            `;
-            
-            // Dibujar círculo del cliente en el mapa si tiene coordenadas válidas
-            if (c.lat && c.lat !== 0) {
-                L.circleMarker([c.lat, c.lng], { 
-                    color: isDone ? '#00c853' : '#ff9800', 
-                    radius: 7, 
-                    fillOpacity: 0.8 
-                }).addTo(map).bindTooltip(c.nombre);
-            }
+        card.style.display = borrador.length > 0 ? 'block' : 'none';
+        
+        // 1. Renderizar Lista visual
+        lista.innerHTML = borrador.map((item, i) => `
+            <div class="item-draft">
+                <span><b>${i+1}.</b> ${item.nombre}</span>
+                <button style="background:none; border:none; color:#ff5555; cursor:pointer;" onclick="borrador.splice(${i},1); actualizarBorradorUI()">✕</button>
+            </div>
+        `).join('');
+
+        // 2. Generar Texto Llano
+        let texto = `${getSaludo()} equipo, ruta para hoy:\n\n`;
+        borrador.forEach((p, i) => {
+            texto += `${i + 1}. ${p.nombre}\n`;
         });
+        txtArea.value = texto;
     }
 
-    // 4. Calcular distancia (Fórmula matemática)
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371000; // Radio de la Tierra en metros
-        const dLat = (lat2-lat1) * Math.PI/180;
-        const dLon = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    function copiarReporte() {
+        const copyText = document.getElementById("reporte-texto");
+        copyText.select();
+        document.execCommand("copy");
+        alert("¡Texto copiado!");
     }
 
-    // 5. Motor de Actualización (Aquí arreglamos los 14,000 km)
-    async function actualizarGps(lat, lng) {
-        // FILTRO DE SEGURIDAD: Si la posición es 0, no calcules nada para evitar errores
-        if (!lat || lat === 0 || !lng || lng === 0) return;
-
-        markerChofer.setLatLng([lat, lng]);
-        map.panTo([lat, lng]); // Seguir al chofer con la cámara
-        document.getElementById('status').innerHTML = '<span class="tag-live">● EN VIVO</span> Unidad 01 - SDE';
-
-        for (let c of clientes) {
-            if (c.estado !== 'Entregado') {
-                // Si el cliente no tiene coordenadas guardadas (0,0), salta al siguiente
-                if (!c.lat || c.lat === 0) {
-                    const el = document.getElementById(`d-${c.id}`);
-                    if (el) el.innerText = "📍 GPS Cliente no definido";
-                    continue;
-                }
-
-                const metros = calcularDistancia(lat, lng, c.lat, c.lng);
-                const el = document.getElementById(`d-${c.id}`);
-                
-                if (el) {
-                    // Convertir a KM si está lejos, o dejarlo en metros si está cerca
-                    if (metros >= 1000) {
-                        el.innerText = `A ${(metros / 1000).toFixed(1)} km`;
-                    } else {
-                        el.innerText = `A ${metros.toFixed(0)} metros`;
-                    }
-                }
-
-                // Check automático si está a 15 metros o menos
-                if (metros <= 15) {
-                    await db.from('ruta_activa').update({ estado: 'Entregado' }).eq('id', c.id);
-                }
-            }
-        }
+    async function lanzarRuta() {
+        if (!confirm("¿Lanzar esta ruta al monitor?")) return;
+        await db.from('ruta_activa').delete().neq('id', -1);
+        const paradas = borrador.map((p, i) => ({ 
+            id: i, nombre: `${p.nombre} (${p.ubi})`, 
+            lat: p.lat, lng: p.lng, orden: i+1, estado: 'Pendiente' 
+        }));
+        await db.from('ruta_activa').insert(paradas);
+        location.href = 'despacho.html';
     }
 
-    // 6. Suscripción en Tiempo Real
-    db.channel('monitor_pro')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rastreo_chofer', filter: 'id=eq.chofer1' }, p => {
-        actualizarGps(p.new.lat, p.new.lng);
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'ruta_activa' }, () => {
-        cargarDatos(); // Recargar la lista si algo cambia en la ruta
-    })
-    .subscribe();
+    async function guardarNuevo() {
+        const nombre = document.getElementById('n-nombre').value;
+        const datos = {
+            nombre,
+            codigo_rp: document.getElementById('n-codigo').value,
+            lat: document.getElementById('n-lat').value || null,
+            lng: document.getElementById('n-lng').value || null,
+            lat_2: document.getElementById('n-lat-2').value || null,
+            lng_2: document.getElementById('n-lng-2').value || null,
+            lat_temp: document.getElementById('n-lat-temp').value || null,
+            lng_temp: document.getElementById('n-lng-temp').value || null
+        };
+        if (!nombre) return alert("Nombre obligatorio");
+        await db.from('clientes').insert([datos]);
+        alert("Guardado"); location.reload();
+    }
 
-    // Arrancar el sistema
-    cargarDatos();
+    init();
 </script>
 </body>
 </html>
