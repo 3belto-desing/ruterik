@@ -1,7 +1,10 @@
 (function () {
   const config = window.RapidPackConfig;
-  const db = window.RapidPackUtils.createClient();
+  const utils = window.RapidPackUtils;
+  const db = utils.createClient();
+  
   let map, markerChofer, markersClientes = [];
+  let currentPos = null;
 
   function toggleTheme() {
     document.body.classList.toggle('light-mode');
@@ -14,67 +17,81 @@
     const isLight = localStorage.getItem('rp-theme') === 'light';
     if(isLight) document.body.classList.add('light-mode');
 
-    // Inicializar mapa
     map = L.map('map', { zoomControl: false }).setView(config.defaultCenter, 13);
     
-    // Capas de mapa (OpenStreetMap para claro, CartoDB para oscuro)
     const tileURL = isLight 
         ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
         : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
         
-    L.tileLayer(tileURL, {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    L.tileLayer(tileURL).addTo(map);
 
-    // Marcador del chofer (RapidPack Red)
     const iconChofer = L.divIcon({
-        className: 'custom-div-icon',
-        html: "<div style='background-color:#ff3d00; width:15px; height:15px; border-radius:50%; border:3px solid white;'></div>",
-        iconSize: [15, 15],
-        iconAnchor: [7, 7]
+        className: 'chofer-icon',
+        html: `<div style="background:#ff3d00; width:14px; height:14px; border-radius:50%; border:3px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [20, 20]
     });
 
     markerChofer = L.marker(config.defaultCenter, { icon: iconChofer }).addTo(map);
-
-    // Forzar redibujado para evitar áreas grises
-    setTimeout(() => { map.invalidateSize(); }, 500);
+    setTimeout(() => map.invalidateSize(), 500);
   }
 
-  // GPS EN VIVO
+  // Actualiza los textos de distancia en la barra lateral
+  function actualizarDistancias() {
+    if (!currentPos) return;
+
+    const items = document.querySelectorAll('.cliente-item');
+    items.forEach(item => {
+      const lat = parseFloat(item.dataset.lat);
+      const lng = parseFloat(item.dataset.lng);
+      const distEl = item.querySelector('.distancia-valor');
+
+      if (!isNaN(lat) && !isNaN(lng) && distEl) {
+        const metros = utils.haversineMeters(currentPos.lat, currentPos.lng, lat, lng);
+        distEl.innerText = utils.formatDistance(metros);
+      }
+    });
+  }
+
+  // RASTREO GPS
   setInterval(() => {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const { latitude, longitude } = pos.coords;
-      const newPos = [latitude, longitude];
+      currentPos = { lat: latitude, lng: longitude };
       
-      markerChofer.setLatLng(newPos);
+      markerChofer.setLatLng([latitude, longitude]);
+      document.getElementById('status').innerText = `GPS Activo: ${new Date().toLocaleTimeString()}`;
       
+      // Actualizar distancias visuales
+      actualizarDistancias();
+
+      // Enviar a Supabase
       await db.from(config.tables.driverTracking).upsert({
         driver_id: config.driverId,
         lat: latitude,
         lng: longitude,
         recorded_at: new Date()
       });
-    }, (err) => console.error("Error GPS:", err), { enableHighAccuracy: true });
+    }, null, { enableHighAccuracy: true });
   }, 5000);
 
   async function loadRoute() {
-    const { data, error } = await db.from(config.tables.activeRoute).select('*').order('orden');
-    if (error) return;
-
+    const { data } = await db.from(config.tables.activeRoute).select('*').order('orden');
     const lista = document.getElementById('lista');
     lista.innerHTML = '';
     
-    // Limpiar marcadores viejos
     markersClientes.forEach(m => map.removeLayer(m));
     markersClientes = [];
 
     data.forEach(c => {
       const item = document.createElement('div');
       item.className = 'cliente-item';
+      item.dataset.lat = c.lat;
+      item.dataset.lng = c.lng;
+
       item.innerHTML = `
-        <div style="display:flex; flex-direction:column;">
-            <b style="font-size:14px;">${c.orden}. ${c.nombre}</b>
-            <span style="font-size:11px; opacity:0.7;">Pendiente</span>
+        <div class="info-entrega">
+            <span class="nombre-cliente">${c.orden}. ${c.nombre}</span>
+            <span class="distancia-valor">Calculando...</span>
         </div>
         <button class="btn-check" onclick="entregado('${c.id}')">ENTREGAR</button>
       `;
@@ -82,14 +99,12 @@
 
       if (c.lat && c.lng) {
         const m = L.circleMarker([c.lat, c.lng], { 
-            color: '#00c853', 
-            fillColor: '#00c853', 
-            fillOpacity: 0.5, 
-            radius: 8 
-        }).addTo(map).bindPopup(`<b>${c.nombre}</b>`);
+          color: '#00c853', fillColor: '#00c853', fillOpacity: 0.4, radius: 10 
+        }).addTo(map).bindPopup(c.nombre);
         markersClientes.push(m);
       }
     });
+    actualizarDistancias();
   }
 
   window.entregado = async (id) => {
