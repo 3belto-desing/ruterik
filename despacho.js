@@ -18,24 +18,20 @@
     if(isLight) document.body.classList.add('light-mode');
 
     map = L.map('map', { zoomControl: false }).setView(config.defaultCenter, 13);
-    
     const tileURL = isLight 
         ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
         : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        
     L.tileLayer(tileURL).addTo(map);
 
     const iconChofer = L.divIcon({
         className: 'chofer-icon',
-        html: `<div style="background:#ff3d00; width:14px; height:14px; border-radius:50%; border:3px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+        html: `<div style="background:#ff3d00; width:14px; height:14px; border-radius:50%; border:3px solid #fff;"></div>`,
         iconSize: [20, 20]
     });
-
     markerChofer = L.marker(config.defaultCenter, { icon: iconChofer }).addTo(map);
     setTimeout(() => map.invalidateSize(), 500);
   }
 
-  // Actualiza los textos de distancia en la barra lateral
   function actualizarDistancias() {
     if (!currentPos) return;
 
@@ -52,27 +48,40 @@
     });
   }
 
-  // RASTREO GPS
-  setInterval(() => {
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const { latitude, longitude } = pos.coords;
-      currentPos = { lat: latitude, lng: longitude };
-      
-      markerChofer.setLatLng([latitude, longitude]);
-      document.getElementById('status').innerText = `GPS Activo: ${new Date().toLocaleTimeString()}`;
-      
-      // Actualizar distancias visuales
-      actualizarDistancias();
+  // FUNCIÓN GPS MEJORADA
+  function iniciarSeguimientoGPS() {
+    if (!navigator.geolocation) {
+        document.getElementById('status-gps').innerText = "GPS No soportado";
+        return;
+    }
 
-      // Enviar a Supabase
-      await db.from(config.tables.driverTracking).upsert({
-        driver_id: config.driverId,
-        lat: latitude,
-        lng: longitude,
-        recorded_at: new Date()
-      });
-    }, null, { enableHighAccuracy: true });
-  }, 5000);
+    // Usamos watchPosition para que responda INSTANTÁNEAMENTE al movimiento
+    navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        currentPos = { lat: latitude, lng: longitude };
+        
+        document.getElementById('status-gps').innerText = "GPS: Conectado";
+        document.getElementById('status-gps').style.color = "#00c853";
+
+        markerChofer.setLatLng([latitude, longitude]);
+        actualizarDistancias();
+
+        // Enviar a base de datos de forma asíncrona
+        db.from(config.tables.driverTracking).upsert({
+          driver_id: config.driverId,
+          lat: latitude,
+          lng: longitude,
+          recorded_at: new Date()
+        }).then();
+      },
+      (err) => {
+        document.getElementById('status-gps').innerText = "Error GPS: " + err.message;
+        document.getElementById('status-gps').style.color = "#ff3d00";
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
 
   async function loadRoute() {
     const { data } = await db.from(config.tables.activeRoute).select('*').order('orden');
@@ -81,6 +90,11 @@
     
     markersClientes.forEach(m => map.removeLayer(m));
     markersClientes = [];
+
+    if (!data || data.length === 0) {
+        lista.innerHTML = '<p style="padding:20px; opacity:0.5;">No hay entregas pendientes.</p>';
+        return;
+    }
 
     data.forEach(c => {
       const item = document.createElement('div');
@@ -91,16 +105,16 @@
       item.innerHTML = `
         <div class="info-entrega">
             <span class="nombre-cliente">${c.orden}. ${c.nombre}</span>
-            <span class="distancia-valor">Calculando...</span>
+            <span class="distancia-valor">Buscando señal...</span>
         </div>
-        <button class="btn-check" onclick="entregado('${c.id}')">ENTREGAR</button>
+        <button class="btn-check" onclick="entregado('${c.id}')">OK</button>
       `;
       lista.appendChild(item);
 
       if (c.lat && c.lng) {
         const m = L.circleMarker([c.lat, c.lng], { 
           color: '#00c853', fillColor: '#00c853', fillOpacity: 0.4, radius: 10 
-        }).addTo(map).bindPopup(c.nombre);
+        }).addTo(map);
         markersClientes.push(m);
       }
     });
@@ -115,5 +129,6 @@
   window.addEventListener('DOMContentLoaded', () => {
     initMap();
     loadRoute();
+    iniciarSeguimientoGPS();
   });
 })();
