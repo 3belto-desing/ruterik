@@ -7,25 +7,67 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --rp-red: #ff3d00; --bg-sidebar: #1a1a1b; --text-main: #fff; }
-        body.light-mode { --bg-sidebar: #fff; --text-main: #000; }
-        body, html { margin:0; padding:0; height:100vh; display:flex; font-family: sans-serif; overflow:hidden; }
-        #sidebar { width: 300px; background: var(--bg-sidebar); color: var(--text-main); border-right: 2px solid #333; display:flex; flex-direction:column; transition: 0.3s; }
-        #map { flex: 1; background: #0b0b0b; }
+        :root { 
+            --rp-red: #ff3d00; 
+            --bg-sidebar: #1a1a1b; 
+            --text-main: #fff; 
+            --border: #333;
+        }
+        body.light-mode { 
+            --bg-sidebar: #fff; 
+            --text-main: #000; 
+            --border: #ddd;
+        }
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            height: 100vh; 
+            width: 100vw;
+            display: flex; 
+            font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; 
+        }
+        #sidebar { 
+            width: 300px; 
+            height: 100vh;
+            background: var(--bg-sidebar); 
+            color: var(--text-main); 
+            border-right: 2px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 1000; /* Asegura que el panel esté sobre el mapa */
+        }
+        /* ESTA ES LA PARTE CLAVE PARA EL MAPA */
+        #map { 
+            flex-grow: 1; 
+            height: 100vh; 
+            width: 100%;
+            background: #0b0b0b; 
+        }
         .header { padding: 20px; border-bottom: 2px solid var(--rp-red); }
-        .cliente-item { padding: 15px; border-bottom: 1px solid #333; display:flex; justify-content: space-between; align-items: center; }
-        .btn-check { background: var(--rp-red); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; }
+        .cliente-item { 
+            padding: 15px; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .btn-check { background: var(--rp-red); color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight: bold; }
+        button { cursor: pointer; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-sidebar); color: var(--text-main); }
     </style>
 </head>
 <body>
     <div id="sidebar">
         <div class="header">
             <h2 style="color:var(--rp-red); margin:0;">RUTERIK RADAR</h2>
-            <button onclick="toggleTheme()" style="margin-top:10px; width:100%;">Modo Claro/Oscuro</button>
-            <button onclick="location.href='index.html'" style="margin-top:5px; width:100%;">VOLVER</button>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px;">
+                <button onclick="toggleTheme()">Cambiar Modo</button>
+                <button onclick="location.href='index.html'" style="background:var(--rp-red); color:white; border:none;">VOLVER AL PANEL</button>
+            </div>
         </div>
         <div id="lista" style="overflow-y:auto; flex:1;"></div>
     </div>
+    
     <div id="map"></div>
 
     <script src="rapidpack.shared.js"></script>
