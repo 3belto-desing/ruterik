@@ -55,7 +55,7 @@
         .btn-casa { background: #3498db; }
         .btn-trabajo { background: #9b59b6; }
         .btn-temp { background: #f39c12; }
-        #reporte-texto { width: 100%; height: 150px; background: #000; color: var(--rp-green); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: monospace; resize: none; margin-top: 10px; }
+        #reporte-texto { width: 100%; height: 160px; background: #000; color: var(--rp-green); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: monospace; resize: none; margin-top: 10px; }
         .item-draft { background: var(--bg-input); padding: 10px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--rp-red); }
         label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; font-weight: bold; }
         .f-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -84,6 +84,7 @@
         <div class="card">
             <h3>Buscar cliente</h3>
             <input type="text" id="buscador" class="search-box" placeholder="Nombre..." oninput="buscar()">
+            
             <div id="cliente-seleccionado">
                 <button class="btn-edit" onclick="cargarEdicion()">✏️</button>
                 <h2 id="view-nombre" style="margin:0; font-size:18px;"></h2>
@@ -93,15 +94,19 @@
                     <button id="btn-temp" class="btn-ubi btn-temp" onclick="addParada('TEMPORAL')">TEMP</button>
                 </div>
             </div>
+
             <div id="card-borrador" style="display:none; margin-top:20px; border-top:1px solid var(--border); padding-top:20px;">
-                <h3>Texto de ruta (Auto-optimizado)</h3>
-                <textarea id="reporte-texto" readonly placeholder="La ruta aparecerá aquí automáticamente..."></textarea>
+                <h3>Optimización de Ruta</h3>
+                <button onclick="ejecutarOptimizacion()" style="width:100%; background:var(--rp-red); color:white; border:none; padding:15px; font-weight:bold; border-radius:8px; cursor:pointer; margin-bottom:10px;">
+                    OPTIMIZAR Y GENERAR MENSAJE
+                </button>
+                <textarea id="reporte-texto" readonly placeholder="El mensaje aparecerá aquí al optimizar..."></textarea>
                 <div id="lista-borrador" style="margin-top:15px; max-height: 200px; overflow-y: auto;"></div>
             </div>
         </div>
+
         <div class="card">
             <h3 id="form-titulo">Registro de cliente</h3>
-            <input type="hidden" id="edit-id">
             <div class="f-row">
                 <div style="flex:2"><label>Nombre</label><input type="text" id="n-nombre"></div>
                 <div style="flex:1"><label>Codigo RP</label><input type="text" id="n-codigo"></div>
@@ -111,7 +116,6 @@
             <div class="form-section"><label>TEMP</label><div class="f-row"><input type="number" step="any" id="n-lat-temp" placeholder="Lat"><input type="number" step="any" id="n-lng-temp" placeholder="Lng"></div></div>
             <div style="display:flex; gap:10px;">
                 <button id="btn-save" onclick="guardarCliente()" style="flex:2; background:var(--rp-red); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; cursor:pointer;">GUARDAR EN SUPABASE</button>
-                <button id="btn-cancel" onclick="location.reload()" style="flex:1; background:#444; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; display:none;">X</button>
             </div>
         </div>
     </main>
