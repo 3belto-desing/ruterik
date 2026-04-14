@@ -1,13 +1,13 @@
-// admin.js
+// admin.js - RUTERIK ADMIN LOGIC
 
-// Configuración de la ubicación base (Base RapidPack)
-const PUNTO_PARTIDA = { lat: 18.4861, lng: -69.9312 }; 
+// 1. CONFIGURACIÓN INICIAL
+const PUNTO_PARTIDA = { lat: 18.4861, lng: -69.9312 }; // Base RapidPack
 let clienteActual = null; 
 let borradorRuta = []; 
 
-// Función para calcular distancia entre dos coordenadas (Km)
+// 2. ALGORITMO DE OPTIMIZACIÓN (Matemática de Ruta)
 function calcularDistancia(lat1, lon1, lat2, lon2) {
-    const R = 6371;
+    const R = 6371; // Radio de la Tierra en km
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -16,7 +16,6 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// Algoritmo de optimización: Vecino más cercano
 function optimizarRuta(paradas) {
     let pendientes = [...paradas];
     let actual = PUNTO_PARTIDA;
@@ -42,63 +41,85 @@ function optimizarRuta(paradas) {
     return rutaOrdenada;
 }
 
-// Generar el mensaje final de WhatsApp
+// 3. ACCIONES DE LA RUTA (Generar Mensaje)
 function ejecutarOptimizacion() {
-    if (borradorRuta.length === 0) return alert("Añade entregas primero.");
+    if (borradorRuta.length === 0) {
+        alert("Agrega entregas a la lista antes de optimizar.");
+        return;
+    }
 
     const listaOrdenada = optimizarRuta(borradorRuta);
     const ahora = new Date();
     const hora = ahora.getHours();
     
-    let saludo = hora < 12 ? "Buenos días" : (hora < 18 ? "Buenas tardes" : "Buenas noches");
+    // Saludo dinámico según la hora dominicana
+    let saludo = "Buenos días";
+    if (hora >= 12 && hora < 18) saludo = "Buenas tardes";
+    else if (hora >= 18) saludo = "Buenas noches";
+
     const fecha = ahora.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
     let mensaje = `${saludo}\nruta para hoy ${fecha}:\n\n`;
     listaOrdenada.forEach((entrega, i) => {
+        // Formato solicitado para el mensaje de WhatsApp
         mensaje += `${i + 1}. ${entrega.nombre} - ${entrega.codigo}\n`;
     });
 
     document.getElementById('reporte-texto').value = mensaje;
 }
 
-// Buscar cliente en tiempo real en Supabase
+// 4. SUPABASE: BUSCAR CLIENTE (Real)
 async function buscar() {
-    const query = document.getElementById('buscador').value;
-    if (query.length > 2) {
-        const { data, error } = await supabaseClient
-            .from('clientes')
-            .select('*')
-            .ilike('nombre', `%${query}%`)
-            .limit(1);
+    const buscador = document.getElementById('buscador');
+    const query = buscador.value.trim();
 
-        if (data && data.length > 0) {
-            const c = data[0];
-            clienteActual = {
-                nombre: c.nombre,
-                codigo: c.codigo,
-                casa: { lat: c.lat_casa, lng: c.lng_casa },
-                trabajo: { lat: c.lat_trabajo, lng: c.lng_trabajo },
-                temporal: { lat: c.lat_temp, lng: c.lng_temp }
-            };
-            document.getElementById('view-nombre').innerText = `${clienteActual.nombre} (${clienteActual.codigo})`;
-            document.getElementById('cliente-seleccionado').style.display = 'block';
-            document.getElementById('card-borrador').style.display = 'block';
+    if (query.length > 2) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('clientes')
+                .select('*')
+                .ilike('nombre', `%${query}%`)
+                .limit(1);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const c = data[0];
+                clienteActual = {
+                    nombre: c.nombre,
+                    codigo: c.codigo,
+                    casa: { lat: c.lat_casa, lng: c.lng_casa },
+                    trabajo: { lat: c.lat_trabajo, lng: c.lng_trabajo },
+                    temporal: { lat: c.lat_temp, lng: c.lng_temp }
+                };
+                document.getElementById('view-nombre').innerText = `${clienteActual.nombre} (${clienteActual.codigo})`;
+                document.getElementById('cliente-seleccionado').style.display = 'block';
+                document.getElementById('card-borrador').style.display = 'block';
+            } else {
+                document.getElementById('cliente-seleccionado').style.display = 'none';
+            }
+        } catch (err) {
+            console.error("Error en búsqueda:", err.message);
         }
     }
 }
 
-// Guardar nuevo cliente en Supabase
+// 5. SUPABASE: GUARDAR NUEVO CLIENTE
 async function guardarCliente() {
     const btn = document.getElementById('btn-save');
-    const nombre = document.getElementById('n-nombre').value;
-    const codigo = document.getElementById('n-codigo').value;
+    const nombre = document.getElementById('n-nombre').value.trim();
+    const codigo = document.getElementById('n-codigo').value.trim();
 
-    if (!nombre || !codigo) return alert("Faltan datos obligatorios.");
+    if (!nombre || !codigo) {
+        alert("Nombre y Código son obligatorios para registrar en RapidPack.");
+        return;
+    }
 
     btn.disabled = true;
-    btn.innerText = "GUARDANDO...";
+    btn.innerText = "REGISTRANDO...";
 
-    const datos = {
+    // Mapeo exacto a las columnas de la tabla en Supabase
+    const nuevoRegistro = {
         nombre: nombre.toUpperCase(),
         codigo: codigo.toUpperCase(),
         lat_casa: parseFloat(document.getElementById('n-lat').value) || 0,
@@ -110,27 +131,37 @@ async function guardarCliente() {
     };
 
     try {
-        const { error } = await supabaseClient.from('clientes').insert([datos]);
+        const { error } = await supabaseClient.from('clientes').insert([nuevoRegistro]);
+        
         if (error) throw error;
-        alert("Cliente guardado con éxito.");
+        
+        alert("Cliente guardado exitosamente.");
         location.reload();
     } catch (err) {
-        alert("Error al guardar: " + err.message);
+        console.error("Error al guardar:", err);
+        alert("Error de Supabase: " + err.message);
     } finally {
         btn.disabled = false;
         btn.innerText = "GUARDAR EN SUPABASE";
     }
 }
 
-// Gestión de la lista de paradas
+// 6. GESTIÓN DE LA LISTA TEMPORAL (FRONTEND)
 function addParada(tipo) {
-    let c = tipo === 'CASA' ? clienteActual.casa : (tipo === 'TRABAJO' ? clienteActual.trabajo : clienteActual.temporal);
+    if (!clienteActual) return;
+
+    let coords;
+    if (tipo === 'CASA') coords = clienteActual.casa;
+    else if (tipo === 'TRABAJO') coords = clienteActual.trabajo;
+    else coords = clienteActual.temporal;
+
     borradorRuta.push({
         nombre: clienteActual.nombre,
         codigo: clienteActual.codigo,
-        lat: c.lat,
-        lng: c.lng
+        lat: coords.lat,
+        lng: coords.lng
     });
+
     actualizarVista();
 }
 
@@ -138,7 +169,7 @@ function actualizarVista() {
     const lista = document.getElementById('lista-borrador');
     lista.innerHTML = borradorRuta.map((p, i) => `
         <div class="item-draft">
-            <div><strong>${p.nombre}</strong></div>
+            <div><strong>${p.nombre}</strong> <small>(${p.codigo})</small></div>
             <button onclick="borrar(${i})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">X</button>
         </div>
     `).join('');
@@ -147,11 +178,15 @@ function actualizarVista() {
 function borrar(i) {
     borradorRuta.splice(i, 1);
     actualizarVista();
+    document.getElementById('reporte-texto').value = ""; // Limpiar mensaje si cambia la lista
 }
 
+// 7. UTILIDADES DE INTERFAZ
 function login() {
     document.getElementById('login-box').style.display = 'none';
     document.getElementById('admin-content').style.display = 'block';
 }
 
-function toggleTheme() { document.body.classList.toggle('light-mode'); }
+function toggleTheme() {
+    document.body.classList.toggle('light-mode');
+}
